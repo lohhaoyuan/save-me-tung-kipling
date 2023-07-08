@@ -7,7 +7,7 @@
 #include "vector.h"
 
 // If it's the new robot, uncomment this
-// #define NEW_BOT
+#define NEW_BOT
 
 #define SHARED_BAUD_RATE  1000000 // this is used between microcontrollers
 #define MONITOR_BAUD_RATE 115200

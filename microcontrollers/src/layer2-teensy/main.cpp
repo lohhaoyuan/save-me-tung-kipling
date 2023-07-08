@@ -233,10 +233,13 @@ void loop() {
     // Override for robotHasBall because the ball bounces out
     if (abs(sensors.ball.angle + ROBOT_BALL_ANGLE_OFFSET) <=
             ROBOT_BALL_MAX_ANGLE &&
-        sensors.ball.distance <= ROBOT_BALL_MIN_DISTANCE &&
-        smallerAngleDifference(sensors.ball.angle + ROBOT_BALL_ANGLE_OFFSET,
-                               sensors.offensiveGoal.angle) <=
-            BALL_GOAL_ANGLE_THRESHOLD)
+        sensors.ball.distance <= ROBOT_BALL_MIN_DISTANCE
+#ifndef SUPERTEAM
+        && smallerAngleDifference(sensors.ball.angle + ROBOT_BALL_ANGLE_OFFSET,
+                                  sensors.offensiveGoal.angle) <=
+               BALL_GOAL_ANGLE_THRESHOLD
+#endif
+    )
         sensors.robotHasBall = true;
 
     // Update movement controllers
@@ -298,7 +301,8 @@ void loop() {
         // If we have the ball, move to the goal
         movement.setDirection(
             (Direction::Constant){sensors.offensiveGoal.angle});
-        movement.setHeading((Heading::Constant){sensors.offensiveGoal.angle});
+        movement.setHeading(
+            (Heading::Constant){sensors.offensiveGoal.angle * 1.4});
         movement.setVelocity((Velocity::Constant){Movement::applySigmoid(
             GOAL_MOVEMENT_START_SPEED, GOAL_MOVEMENT_END_SPEED,
             sensors.offensiveGoal.distance /

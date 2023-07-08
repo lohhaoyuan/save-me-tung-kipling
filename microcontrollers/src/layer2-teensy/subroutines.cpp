@@ -168,6 +168,7 @@ void moveBehindBall() {
     // Then, we pack it into instructions for our update function.
     movement.setDirection(
         (Direction::Constant){sensors.ball.angle + angleOffset});
+#ifndef SUPERTEAM
     movement.setHeading((Heading::Constant){
         // Try to keep straight as much as possible to ensure the robot has to
         // leave the field the least if the ball is near the boundary.
@@ -175,6 +176,15 @@ void moveBehindBall() {
             ? constrain(sensors.ball.angle, -BALL_MOVEMENT_MAX_HEADING,
                         BALL_MOVEMENT_MAX_HEADING)
             : 0});
+#else
+    movement.setHeading((Heading::Constant){
+        // Try to keep straight as much as possible to ensure the robot has to
+        // leave the field the least if the ball is near the boundary.
+        sensors.ball.distance <= BALL_MOVEMENT_FACE_BALL_DISTANCE
+            ? constrain(sensors.offensiveGoal.angle, -BALL_MOVEMENT_MAX_HEADING,
+                        BALL_MOVEMENT_MAX_HEADING)
+            : 0});
+#endif
     movement.setVelocity((Velocity::Constant){Movement::applySigmoid(
         BALL_MOVEMENT_START_SPEED, BALL_MOVEMENT_END_SPEED,
         (sensors.ball.distance - BALL_MOVEMENT_STOP_DECELERATING) /
@@ -221,7 +231,7 @@ void avoidLine() {
                 // towards the ball
                 const auto ballError =
                     xMargin < yMargin ? sensors.ball.y() : sensors.ball.x();
-                const auto trackLeftwards = (x < 0) ^ (ballError < 0);
+                const bool trackLeftwards = (x < 0) ^ (ballError < 0);
                 movement.setDirection((Direction::LineTrack){
                     sensors.line, BALL_LINE_TRACK_TARGET, trackLeftwards});
 

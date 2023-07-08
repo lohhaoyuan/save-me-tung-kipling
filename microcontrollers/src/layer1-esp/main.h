@@ -70,28 +70,41 @@ constexpr std::array<double, PHOTODIODE_COUNT> PHOTODIODE_BEARINGS = {
 #define LIGHT_RING_CALIBRATION_DURATION 1000 // in ms
 #ifdef NEW_BOT
 // old
-// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
+// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS =
+// {
 //     2185, 1885, 1386, 1288, 1305, 1213, 1329, 2070, 2031, 1880,
 //     964,  1257, 1174, 1693, 2301, 2322, 1673, 1152, 1192, 1270,
 //     1135, 1368, 18,   15,   1376, 1280, 1410, 1239, 1564, 1803,
 // };
 // at bordeaux
-// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
-//     2248, 2085, 1549,        1455,        1594, 1509, 1825, 2181, 2176, 2185,
-//     1592, 1234, 1493,        2096,        2196, 2259, 1883, 1297, 1279, 1337,
-//     1318, 1772, 100 /*ded*/, 100 /*ded*/, 1607, 1539, 1756, 1775, 2070, 2234,
+// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS =
+// {
+//     2248, 2085, 1549,        1455,        1594, 1509, 1825, 2181, 2176,
+//     2185, 1592, 1234, 1493,        2096,        2196, 2259, 1883, 1297,
+//     1279, 1337, 1318, 1772, 100 /*ded*/, 100 /*ded*/, 1607, 1539, 1756,
+//     1775, 2070, 2234,
 // };
 // lifted up at bordeaux
-// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
+// constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS =
+// {
 //     842, 671, 755,         627,         588, 806, 882, 932, 1043, 1020,
 //     662, 776, 732,         783,         812, 807, 828, 589, 679,  799,
 //     568, 833, 100 /*ded*/, 100 /*ded*/, 782, 614, 712, 586, 861,  910,
 // };
+// best at bordeaux (USE THIS)
 constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
     1342, 1188, 1182,        928,         887,  1057, 1157, 1238, 1281, 1203,
     767,  843,  828,         980,         1022, 1062, 986,  616,  679,  799,
     568,  833,  100 /*ded*/, 100 /*ded*/, 782,  794,  978,  861,  1145, 1284,
 };
+    // superteam
+    // constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS =
+    // {
+    //     1720, 1370, 1178,        968,         1078, 1102, 1205, 1514, 1552,
+    //     1428, 955,  797,  947,         1213,        1340, 1502, 1192, 830,
+    //     980,  1027, 790,  1108, 100 /*ded*/, 100 /*ded*/, 785,  783,  931,
+    //     910,  1327, 1603,
+    // };
 
 #else
 // old

@@ -18,9 +18,11 @@ enum class TeensyMode {
     CalibrateLightRing,
     CalibrateIRRing,
 };
-#define TEENSY_MODE      TeensyMode::Default
-#define FACE_YELLOW_GOAL false
-#define IS_GOALIE        false
+#define TEENSY_MODE TeensyMode::Default
+#define FACE_YELLOW_GOAL                                                       \
+    false // will be overriden by DIP switch on NEW_BOT (YES = face yellow)
+#define IS_GOALIE                                                              \
+    true // will be overriden by DIP switch on NEW_BOT (YES = goalie)
 // #define SUPERTEAM
 
 // Pins
@@ -55,10 +57,10 @@ enum class TeensyMode {
 
 // Motors and sensors
 #ifdef NEW_BOT
-    #define MOTOR_FL_REVERSED   true
-    #define MOTOR_FR_REVERSED   true
-    #define MOTOR_BL_REVERSED   true
-    #define MOTOR_BR_REVERSED   true
+    #define MOTOR_FL_REVERSED   false
+    #define MOTOR_FR_REVERSED   false
+    #define MOTOR_BL_REVERSED   false
+    #define MOTOR_BR_REVERSED   false
     #define MOTOR_FL_MULTIPLIER 1.0
     #define MOTOR_FR_MULTIPLIER 1.0
     #define MOTOR_BL_MULTIPLIER 1.0
@@ -78,7 +80,7 @@ enum class TeensyMode {
     #define MOTOR_FR_MULTIPLIER            1.50
     #define MOTOR_BL_MULTIPLIER            1.40
     #define MOTOR_BR_MULTIPLIER            1.0
-    #define LIGHTGATE_THRESHOLD            800
+    #define LIGHTGATE_THRESHOLD            400
     #define LIGHTGATE_THRESHOLD_COMPARATOR <
 #endif
 
@@ -101,11 +103,9 @@ enum class TeensyMode {
 
 // Parameters (for field)
 #define HALF_GOAL_SEPARATION 107.5 // in cm
-// #define FIELD_LENGTH         243.0 // in cm
-#define FIELD_LENGTH 500.0 // in cm
-#define FIELD_WIDTH                                                            \
-    182.0 // in cm
-          // clang-format off
+#define FIELD_LENGTH         243.0 // in cm
+#define FIELD_WIDTH          182.0 // in cm
+// clang-format off
 #define HOME                (Point){0, -40}
 #define NEUTRAL_SPOT_CENTER (Point){0, 0}
 #define NEUTRAL_SPOT_FL     (Point){-11.5, 45}
@@ -137,35 +137,37 @@ enum class TeensyMode {
     #define HEADING_MAX_SETPOINT_CHANGE 0.1
     #define HEADING_STATIONARY_SCALER   2.0
     // PID controller for line tracking (lateral position on line)
-    #define LINE_TRACK_KU     20.0
-    #define LINE_TRACK_KP     0.6 * LINE_TRACK_KU
-    #define LINE_TRACK_KI     1.2
-    #define LINE_TRACK_KD     120
-    #define LINE_TRACK_MIN_DT 1000 // in µs, minimum value for kD to have effect
+    #define LINE_TRACK_KU 4.0
+    #define LINE_TRACK_KP 0.6 * LINE_TRACK_KU
+    #define LINE_TRACK_KI 1.2
+    #define LINE_TRACK_KD 5
+    #define LINE_TRACK_MIN_DT                                                  \
+        10000 // in µs, minimum value for kD to have effect
+    #define LINE_TRACK_MAXI 1000
     // PID controller for moving to a point (distance from point)
     #define STOP_AT_POINT_KU 10.0
-    #define STOP_AT_POINT_KP 0.6 * STOP_AT_POINT_KU
-    #define STOP_AT_POINT_KI 1.2
-    #define STOP_AT_POINT_KD 0.3
+    #define STOP_AT_POINT_KP 0.2 * STOP_AT_POINT_KU
+    #define STOP_AT_POINT_KI 0.4
+    #define STOP_AT_POINT_KD 0.066
     #define STOP_AT_POINT_MIN_DT                                               \
         4000 // in µs, minimum value for kD to have effect
-    #define STOP_AT_POINT_MAXI      50000
-    #define STOP_AT_POINT_MAX_SPEED 250
+    #define STOP_AT_POINT_MAXI      1000000
+    #define STOP_AT_POINT_MAX_SPEED 300
 
     // Parameters (for ball track)
     // Multiplier = e^(DECAY * (START - Ball Distance))
     // https://www.desmos.com/calculator/ixwhywbd5i
     // This is the distance where we start curving maximally as the ball
     // gets closer
-    #define BALL_MOVEMENT_MAX_CURVE 25 // in cm, tuned to ±1.0
+    #define BALL_MOVEMENT_MAX_CURVE 28 // in cm, tuned to ±1.0
     // The larger the value, the faster the decay of the angle offset
-    #define BALL_MOVEMENT_DECAY          0.08
-    #define BALL_MOVEMENT_MAX_MULTIPLIER 2.3
+    #define BALL_MOVEMENT_DECAY          0.06
+    #define BALL_MOVEMENT_MAX_MULTIPLIER 1.5
     // Decelerate as we approach the ball
     #define BALL_MOVEMENT_START_DECELERATING 100 // in cm, from ball
     #define BALL_MOVEMENT_STOP_DECELERATING  0   // in cm, from ball
-    #define BALL_MOVEMENT_START_SPEED        320
-    #define BALL_MOVEMENT_END_SPEED          250
+    #define BALL_MOVEMENT_START_SPEED        220
+    #define BALL_MOVEMENT_END_SPEED          170
     // Face the ball as we approach the ball
     #define BALL_MOVEMENT_FACE_BALL_DISTANCE 60 // in cm
     #define BALL_MOVEMENT_MAX_HEADING        60 // in degrees
@@ -179,7 +181,7 @@ enum class TeensyMode {
     #define KICKER_THRESHOLD_DISTANCE           50
     #define ROBOT_BALL_ANGLE_OFFSET             0
     #define ROBOT_BALL_MAX_ANGLE                10.0
-    #define ROBOT_BALL_MIN_DISTANCE             25
+    #define ROBOT_BALL_MIN_DISTANCE             10.0
     #define BALL_GOAL_ANGLE_THRESHOLD           60
 
     // Parameters (for line avoidance)
@@ -195,6 +197,7 @@ enum class TeensyMode {
     #define BALL_LINE_TRACK_TARGET         0.1
     #define BALL_LINE_TRACK_MAX_HEADING    40.0 // in degrees
     #define BALL_LINE_TRACK_BEHIND_BALL_BY 4.0  // in cm
+    #define BALL_LINE_TRACK_MIN_SPEED      150
     #define BALL_LINE_TRACK_MAX_SPEED      230
 #else
     // Parameters (for drive)
@@ -213,21 +216,23 @@ enum class TeensyMode {
     #define HEADING_MIN_DT              4000 // in µs, minimum value for kD to have effect
     #define HEADING_MAXI                3.5e4
     #define HEADING_MAX_SETPOINT_CHANGE 1.0
-    #define HEADING_STATIONARY_SCALER   2.0
+    #define HEADING_STATIONARY_SCALER   1.0
     // PID controller for line tracking (lateral position on line)
-    #define LINE_TRACK_KU               10.0
+    #define LINE_TRACK_KU               4.0
     #define LINE_TRACK_KP               0.6 * LINE_TRACK_KU
     #define LINE_TRACK_KI               1.2
-    #define LINE_TRACK_KD               120
-    #define LINE_TRACK_MIN_DT           1000 // in µs, minimum value for kD to have effect
+    #define LINE_TRACK_KD               5
+    #define LINE_TRACK_MIN_DT                                                  \
+        10000 // in µs, minimum value for kD to have effect
+    #define LINE_TRACK_MAXI  1000
     // PID controller for moving to a point (distance from point)
-    #define STOP_AT_POINT_KU            10.0
-    #define STOP_AT_POINT_KP            0.6 * STOP_AT_POINT_KU
-    #define STOP_AT_POINT_KI            1.2
-    #define STOP_AT_POINT_KD            0.3
+    #define STOP_AT_POINT_KU 10.0
+    #define STOP_AT_POINT_KP 0.2 * STOP_AT_POINT_KU
+    #define STOP_AT_POINT_KI 0.4
+    #define STOP_AT_POINT_KD 0.066
     #define STOP_AT_POINT_MIN_DT                                               \
         4000 // in µs, minimum value for kD to have effect
-    #define STOP_AT_POINT_MAXI                  100000
+    #define STOP_AT_POINT_MAXI                  1000000
     #define STOP_AT_POINT_MAX_SPEED             300
 
     // Parameters (for ball track)
@@ -256,26 +261,33 @@ enum class TeensyMode {
     #define KICKER_WITH_BALL_THRESHOLD_DISTANCE 0
     #define KICKER_THRESHOLD_DISTANCE           0
     #define ROBOT_BALL_ANGLE_OFFSET             0
-    #define ROBOT_BALL_MAX_ANGLE                20.0
-    #define ROBOT_BALL_MIN_DISTANCE             35
-    #define BALL_GOAL_ANGLE_THRESHOLD           80
+    #if IS_GOALIE
+        #define ROBOT_BALL_MAX_ANGLE    20.0
+        #define ROBOT_BALL_MIN_DISTANCE 35
+    #else
+        #define ROBOT_BALL_MAX_ANGLE    20.0
+        #define ROBOT_BALL_MIN_DISTANCE 35
+    #endif
+
+    #define BALL_GOAL_ANGLE_THRESHOLD       80
 
     // Parameters (for line avoidance)
     // Speed limiting (no line)
-    #define SPEED_LIMIT_START                   90.0
-    #define SPEED_LIMIT_END                     30.0
-    #define SPEED_LIMIT_START_SPEED             400
-    #define SPEED_LIMIT_END_SPEED               200
+    #define SPEED_LIMIT_START               90.0
+    #define SPEED_LIMIT_END                 30.0
+    #define SPEED_LIMIT_START_SPEED         400
+    #define SPEED_LIMIT_END_SPEED           200
     // Staying away from the wall (line depth >=
     // WALL_AVOIDANCE_THRESHOLD)
-    #define WALL_AVOIDANCE_THRESHOLD            0.2
-    #define WALL_AVOIDANCE_SPEED_MULTIPLIER     200 / 0.2
+    #define WALL_AVOIDANCE_THRESHOLD        0.2
+    #define WALL_AVOIDANCE_SPEED_MULTIPLIER 200 / 0.2
     // Travelling on the line (0 <= line depth <
     // WALL_AVOIDANCE_THRESHOLD)
-    #define BALL_LINE_TRACK_TARGET              0.05
-    #define BALL_LINE_TRACK_MAX_HEADING         40.0 // in degrees
-    #define BALL_LINE_TRACK_BEHIND_BALL_BY      4.0  // in cm
-    #define BALL_LINE_TRACK_MAX_SPEED           230
+    #define BALL_LINE_TRACK_TARGET          0.15
+    #define BALL_LINE_TRACK_MAX_HEADING     40.0 // in degrees
+    #define BALL_LINE_TRACK_BEHIND_BALL_BY  4.0  // in cm
+    #define BALL_LINE_TRACK_MIN_SPEED       150
+    #define BALL_LINE_TRACK_MAX_SPEED       230
 #endif
 
 #endif // CONFIG_H

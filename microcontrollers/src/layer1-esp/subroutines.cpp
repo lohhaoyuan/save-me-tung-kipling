@@ -123,12 +123,16 @@ std::pair<double, double> adjustForLineSide(std::pair<double, double> line) {
     } else {
         // The robot is not on the line
 
-        // Snap the depth to 0 or 1
-        if (isInside) {
-            size = 0; // It exited on the inside of the line
-        } else {
-            size = 1; // It exited on the outside of the line
-        }
+        // // Snap the depth to 0 or 1
+        // if (isInside) {
+        //     size = 0; // It exited on the inside of the line
+        // } else {
+        //     size = 1; // It exited on the outside of the line
+        // }
+
+        // Snap the depth to 0 as it's more likely to be inside
+        isInside = true;
+        size = 0;
 
         // Reset the line angle bisector history
         lineAngleBisectorHistory.clear();

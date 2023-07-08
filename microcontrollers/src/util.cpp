@@ -7,7 +7,7 @@
 // Clips an angle to the range (-180, 180]
 double clipAngleTo180(double angle) {
     angle = fmod(angle, 360);
-    return angle > 180 ? angle - 360 : angle;
+    return angle > 180 ? angle - 360 : (angle < -180 ? angle + 360 : angle);
 }
 
 // Clips an angle to the range [0, 360)

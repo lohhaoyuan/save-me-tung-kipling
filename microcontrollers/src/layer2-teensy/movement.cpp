@@ -52,9 +52,9 @@ void Movement::setDirection(const Direction::LineTrack params) {
     const auto correction = lineTrackController.advance(error);
 
     // Compute the direction
-    const auto targetAngle =
-        params.line.angleBisector + (params.trackLeftwards ? -90 : 90);
-    direction = targetAngle + acosd(correction);
+    direction =
+        params.line.angleBisector +
+        (params.trackLeftwards ? -acosd(correction) : acosd(correction));
 }
 
 void Movement::setDirection(const Direction::MoveToPoint params) {

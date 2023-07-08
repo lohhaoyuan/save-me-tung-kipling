@@ -168,6 +168,27 @@ void setup() {
     movement.init();
     Serial.println("Initialised movement devices");
 
+    // while (1) {
+    //     digitalWrite(PIN_MOTOR_FL_DIR, LOW);
+    //     digitalWrite(PIN_MOTOR_FR_DIR, LOW);
+    //     digitalWrite(PIN_MOTOR_BL_DIR, LOW);
+    //     digitalWrite(PIN_MOTOR_BR_DIR, LOW);
+    //     analogWrite(PIN_MOTOR_FL_PWM, 200);
+    //     analogWrite(PIN_MOTOR_FR_PWM, 200);
+    //     analogWrite(PIN_MOTOR_BL_PWM, 200);
+    //     analogWrite(PIN_MOTOR_BR_PWM, 200);
+    //     delay(1000);
+    //     digitalWrite(PIN_MOTOR_FL_DIR, HIGH);
+    //     digitalWrite(PIN_MOTOR_FR_DIR, HIGH);
+    //     digitalWrite(PIN_MOTOR_BL_DIR, HIGH);
+    //     digitalWrite(PIN_MOTOR_BR_DIR, HIGH);
+    //     analogWrite(PIN_MOTOR_FL_PWM, 200);
+    //     analogWrite(PIN_MOTOR_FR_PWM, 200);
+    //     analogWrite(PIN_MOTOR_BL_PWM, 200);
+    //     analogWrite(PIN_MOTOR_BR_PWM, 200);
+    //     delay(1000);
+    // }
+
     // Initialise the IMU
     setupIMU();
     Serial.println("Initialised IMU");
@@ -184,7 +205,7 @@ void loop() {
     checkTeensyReset();
 #ifdef NEW_BOT
     faceYellowGoal = !digitalRead(PIN_DIP_GOAL);
-    isGoalie = digitalRead(PIN_DIP_PLAYSTYLE);
+    isGoalie = !digitalRead(PIN_DIP_PLAYSTYLE);
 #endif
 
     // Read Teensy sensor inputs
@@ -194,13 +215,13 @@ void loop() {
     sensors.robotHasBall =
         lightgateReading LIGHTGATE_THRESHOLD_COMPARATOR LIGHTGATE_THRESHOLD;
 
-    // // Test motion
+    // Test motion
     // Serial.println(sensors.robotAngle);
     // // movement.updateHeading(sensors.robotAngle);
     // movement.headingController.debugPrint();
-    // movement.setDirection((Direction::Constant){0});
+    // movement.setDirection((Direction::Constant){90});
     // movement.setHeading((Heading::Constant){0});
-    // movement.setVelocity((Velocity::Constant){400});
+    // movement.setVelocity((Velocity::Constant){200});
     // movement.drive();
     // return;
 
@@ -270,118 +291,128 @@ void loop() {
     Serial.print(" | ");
 #endif
 
-    // if (isGoalie) {
-    if (false) {
-        double heading, x;
-        if (sensors.ball.exists()) {
-            heading = 0;
-            // heading = sensors.ball.angle + sensors.robotAngle;
-            x = sensors.ball.angle + sensors.robotAngle;
-        } else {
-            heading = sensors.defensiveGoal.angle;
-            x = sensors.robotPosition.x();
-        }
-        movement.setDirection((Direction::LineTrack){sensors.line, 0.5, x < 0});
-        movement.setHeading((Heading::Constant){heading});
-        movement.setVelocity((Velocity::StopAtPoint){x, 180, 200});
-        Serial.printf("TRACKING X=%d", (int)x);
-    } else {
-        limitSpeed = true;
+    limitSpeed = true;
 
-        // Check if we can find the ball
-        if (sensors.robotHasBall && sensors.offensiveGoal.exists()) {
-            // If we have the ball, move to the goal
-            movement.setDirection(
-                (Direction::Constant){sensors.offensiveGoal.angle});
-            movement.setHeading(
-                (Heading::Constant){sensors.offensiveGoal.angle});
-            movement.setVelocity((Velocity::Constant){Movement::applySigmoid(
-                GOAL_MOVEMENT_START_SPEED, GOAL_MOVEMENT_END_SPEED,
-                sensors.offensiveGoal.distance /
-                    GOAL_MOVEMENT_START_DECELERATING)});
-            limitSpeed = false;
+    // Check if we can find the ball
+    if (sensors.robotHasBall && sensors.offensiveGoal.exists()) {
+        // If we have the ball, move to the goal
+        movement.setDirection(
+            (Direction::Constant){sensors.offensiveGoal.angle});
+        movement.setHeading((Heading::Constant){sensors.offensiveGoal.angle});
+        movement.setVelocity((Velocity::Constant){Movement::applySigmoid(
+            GOAL_MOVEMENT_START_SPEED, GOAL_MOVEMENT_END_SPEED,
+            sensors.offensiveGoal.distance /
+                GOAL_MOVEMENT_START_DECELERATING)});
+        limitSpeed = false;
 
 #ifdef DEBUG
-            Serial.print("TRACK GOAL");
+        Serial.print("TRACK GOAL");
 #endif
-        } else {
+    } else if (isGoalie) {
+        if (sensors.line.exists()) {
+            // If we are on the line, track the ball, or center with the
+            // goal if we can't see the ball
+
+            double heading, x;
             if (sensors.ball.exists()) {
-                if (abs(sensors.ball.angle) <= 30 &&
-                    sensors.ball.distance <= 40 &&
-                    abs(sensors.offensiveGoal.angle) <= 20 &&
-                    sensors.offensiveGoal.distance <= 25) {
-                    // The ball is likely in the goal
-                    movement.setHeading((Heading::Constant){0});
-                    movement.setVelocity((Velocity::Constant){0});
-#ifdef DEBUG
-                    Serial.print("BALL IN GOAL");
-#endif
-                } else {
-                    if (sensors.robotAngle + sensors.offensiveGoal.angle > 55 &&
-                        sensors.robotAngle + sensors.ball.angle <= 0 &&
-                        sensors.robotAngle + sensors.ball.angle >= -120) {
-                        movement.setDirection((Direction::MoveToPoint){
-                            sensors.robotPosition, NEUTRAL_SPOT_FL});
-                        movement.setHeading((Heading::MoveToPoint){
-                            sensors.robotPosition, NEUTRAL_SPOT_FL, 0});
-                        movement.setVelocity((Velocity::StopAtPoint){
-                            (Vector::fromPoint(NEUTRAL_SPOT_FL) -
-                             sensors.robotPosition)
-                                .distance,
-                            0, 300});
-                    } else if (sensors.robotAngle +
-                                       sensors.offensiveGoal.angle <
-                                   -55 &&
-                               sensors.robotAngle + sensors.ball.angle >= 0 &&
-                               sensors.robotAngle + sensors.ball.angle <= 120) {
-                        movement.setDirection((Direction::MoveToPoint){
-                            sensors.robotPosition, NEUTRAL_SPOT_FR});
-                        movement.setHeading((Heading::MoveToPoint){
-                            sensors.robotPosition, NEUTRAL_SPOT_FR, 0});
-                        movement.setVelocity((Velocity::StopAtPoint){
-                            (Vector::fromPoint(NEUTRAL_SPOT_FR) -
-                             sensors.robotPosition)
-                                .distance,
-                            0, 300});
-                    } else {
-                        // If we can find the ball, move behind it
-                        moveBehindBall();
-                    }
-#ifdef DEBUG
-                    Serial.print("TRACK BALL");
-#endif
-                }
-            } else if (sensors.robotPosition.exists()) {
-                // If we can't find the ball, return to the home position
-                movement.setDirection(
-                    (Direction::MoveToPoint){sensors.robotPosition, HOME});
-                movement.setHeading(
-                    (Heading::MoveToPoint){sensors.robotPosition, HOME, 0});
-                movement.setVelocity((Velocity::StopAtPoint){
-                    (Vector::fromPoint(HOME) - sensors.robotPosition).distance,
-                    0, 300});
-#ifdef DEBUG
-                Serial.print("GO TO HOME");
-#endif
+                heading = sensors.ball.angle;
+                x = sensors.ball.angle + sensors.robotAngle;
+
+                // Don't chase the ball if it's too far
+                if (sensors.robotAngle + sensors.line.angleBisector < -30)
+                    x = max(x, 0);
+                if (sensors.robotAngle + sensors.line.angleBisector > 30)
+                    x = min(x, 0);
             } else {
-                // We can't find the ball and we don't know where we are ono
+                heading = 0;
+                x = -clipAngleTo180(sensors.defensiveGoal.angle - 180);
+            }
+
+            bool trackLeftwards = x < 0;
+            Serial.print(sensors.robotAngle + sensors.line.angleBisector);
+
+            movement.setDirection(
+                (Direction::LineTrack){sensors.line, 0.3, trackLeftwards});
+            movement.setHeading((Heading::Constant){heading});
+            if (x != 0)
+                movement.setVelocity((Velocity::StopAtPoint){x, 0, 250});
+            else
+                movement.setVelocity((Velocity::Constant){0});
+        } else {
+            // If we aren't on the line, return to it
+            if (sensors.robotPosition.y() > -100) {
+                movement.setHeading((Heading::Constant){sensors.ball.angle});
+                movement.setDirection(
+                    (Direction::Constant){sensors.defensiveGoal.angle});
+                movement.setVelocity(
+                    (Velocity::Constant){Movement::applySigmoid(
+                        300, 200, sensors.defensiveGoal.distance / 180)});
+            } else {
+                // It'll just continue the way it was moving right before it
+                // exited the line, which would probably result in it
+                // returning to the line lol
             }
         }
-
-        // Regardless of the logic above, there are some subroutines we MUST
-        // run Avoid the line if we're near it
-        avoidLine();
-        // Cap speed if we're not facing our goal
-        if (abs(sensors.offensiveGoal.angle) > 135 ||
-            abs(sensors.robotAngle) > 150)
-            movement.setVelocity((Velocity::Limit){200, 200});
-        // Activate solenoid if we're near the offensive goal
-        if (sensors.offensiveGoal.exists() &&
-            (sensors.offensiveGoal.distance <= KICKER_THRESHOLD_DISTANCE ||
-             (sensors.robotHasBall && sensors.offensiveGoal.distance <=
-                                          KICKER_WITH_BALL_THRESHOLD_DISTANCE)))
-            movement.setSolenoidActive();
+    } else {
+        if (sensors.ball.exists()) {
+            if (sensors.robotAngle + sensors.offensiveGoal.angle > 55 &&
+                sensors.robotAngle + sensors.ball.angle <= 0 &&
+                sensors.robotAngle + sensors.ball.angle >= -120) {
+                movement.setDirection((Direction::MoveToPoint){
+                    sensors.robotPosition, NEUTRAL_SPOT_FL});
+                movement.setHeading((Heading::MoveToPoint){
+                    sensors.robotPosition, NEUTRAL_SPOT_FL, 0});
+                movement.setVelocity((Velocity::StopAtPoint){
+                    (Vector::fromPoint(NEUTRAL_SPOT_FL) - sensors.robotPosition)
+                        .distance,
+                    0, 300});
+            } else if (sensors.robotAngle + sensors.offensiveGoal.angle < -55 &&
+                       sensors.robotAngle + sensors.ball.angle >= 0 &&
+                       sensors.robotAngle + sensors.ball.angle <= 120) {
+                movement.setDirection((Direction::MoveToPoint){
+                    sensors.robotPosition, NEUTRAL_SPOT_FR});
+                movement.setHeading((Heading::MoveToPoint){
+                    sensors.robotPosition, NEUTRAL_SPOT_FR, 0});
+                movement.setVelocity((Velocity::StopAtPoint){
+                    (Vector::fromPoint(NEUTRAL_SPOT_FR) - sensors.robotPosition)
+                        .distance,
+                    0, 300});
+            } else {
+                // If we can find the ball, move behind it
+                moveBehindBall();
+            }
+#ifdef DEBUG
+            Serial.print("TRACK BALL");
+#endif
+        } else if (sensors.robotPosition.exists()) {
+            // If we can't find the ball, return to the home position
+            movement.setDirection(
+                (Direction::MoveToPoint){sensors.robotPosition, HOME});
+            movement.setHeading(
+                (Heading::MoveToPoint){sensors.robotPosition, HOME, 0});
+            movement.setVelocity((Velocity::StopAtPoint){
+                (Vector::fromPoint(HOME) - sensors.robotPosition).distance, 0,
+                300});
+#ifdef DEBUG
+            Serial.print("GO TO HOME");
+#endif
+        } else {
+            // We can't find the ball and we don't know where we are ono
+        }
     }
+
+    // Regardless of the logic above, there are some subroutines we MUST
+    // run Avoid the line if we're near it
+    if (!isGoalie) avoidLine();
+    // Cap speed if we're not facing our goal
+    if (abs(sensors.offensiveGoal.angle) > 135 || abs(sensors.robotAngle) > 150)
+        movement.setVelocity((Velocity::Limit){200, 200});
+    // Activate solenoid if we're near the offensive goal
+    if (sensors.offensiveGoal.exists() &&
+        (sensors.offensiveGoal.distance <= KICKER_THRESHOLD_DISTANCE ||
+         (sensors.robotHasBall && sensors.offensiveGoal.distance <=
+                                      KICKER_WITH_BALL_THRESHOLD_DISTANCE)))
+        movement.setSolenoidActive();
 
     // Actuate output
     movement.drive();

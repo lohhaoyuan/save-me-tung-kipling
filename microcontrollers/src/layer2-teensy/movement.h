@@ -96,7 +96,7 @@ class Movement {
         PIDController(0,     // Target lateral distance offset
                       -1, 1, // Output limits
                       LINE_TRACK_KP, LINE_TRACK_KI, LINE_TRACK_KD, // Gains
-                      LINE_TRACK_MIN_DT);
+                      LINE_TRACK_MIN_DT, LINE_TRACK_MAXI);
     PIDController stopAtPointController = PIDController(
         0,                                 // Target distance offset
         -DRIVE_MAX_SPEED, DRIVE_MAX_SPEED, // Output limits

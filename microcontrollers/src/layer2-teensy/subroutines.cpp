@@ -238,11 +238,12 @@ void avoidLine() {
                     // ball
                     movement.setVelocity((Velocity::StopAtPoint){
                         -(sensors.ball.y() + BALL_LINE_TRACK_BEHIND_BALL_BY),
-                        150, 300});
+                        BALL_LINE_TRACK_MIN_SPEED, BALL_LINE_TRACK_MAX_SPEED});
                 } else {
                     // Ball is in front of the robot, stop directly behind ball
-                    movement.setVelocity(
-                        (Velocity::StopAtPoint){sensors.ball.x(), 150, 300});
+                    movement.setVelocity((Velocity::StopAtPoint){
+                        sensors.ball.x(), BALL_LINE_TRACK_MIN_SPEED,
+                        BALL_LINE_TRACK_MAX_SPEED});
                 }
 #ifdef DEBUG
                 Serial.print(" BALL IN");

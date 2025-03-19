@@ -157,16 +157,23 @@ void printLightRingCalibration() {
             if (value < min[i]) min[i] = value;
             if (value > max[i]) max[i] = value;
         }
-    }
-
+        }
     // Print the thresholds (averages of min and max)
-    TeensySerial.printf("Thresholds: {");
+    TeensySerial.printf("Thresholds: { ");
     for (uint8_t i = 0; i < PHOTODIODE_COUNT; ++i) {
-        // TODO: Find a more accurate way to calculate the threshold
+        // Calculate threshold
         const auto threshold = (max[i] + min[i]) / 2;
-        TeensySerial.printf("%d, ", (uint16_t)threshold);
+        
+        // Print threshold value with space
+        TeensySerial.printf("%d", (uint16_t)threshold);
+
+        // Add a comma unless it's the last value
+        if (i < PHOTODIODE_COUNT - 1) {
+            TeensySerial.printf(", ");
+        }
     }
-    TeensySerial.printf("}\n");
+    TeensySerial.printf(" }\n"); // Properly close the array format
+
 }
 
 // Print the values of the light ring

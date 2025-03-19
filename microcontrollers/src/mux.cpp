@@ -17,17 +17,10 @@ void Mux::init() const {
 
 // Selects the channel on the multiplexer
 void Mux::selectChannel(uint8_t channel) const {
-#ifdef ARDUINO_TEENSY40
-    digitalWriteFast(_s0, channel & 0b0001);
-    digitalWriteFast(_s1, channel & 0b0010);
-    digitalWriteFast(_s2, channel & 0b0100);
-    digitalWriteFast(_s3, channel & 0b1000);
-#else
     digitalWrite(_s0, channel & 0b0001);
     digitalWrite(_s1, channel & 0b0010);
     digitalWrite(_s2, channel & 0b0100);
     digitalWrite(_s3, channel & 0b1000);
-#endif
 }
 
 // Selects the channel on the multiplexer and reads the value from the channel,

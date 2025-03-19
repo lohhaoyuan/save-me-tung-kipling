@@ -43,13 +43,8 @@ struct Line {
 
 // Serial payloads
 
-struct L1ESPTxPayload {
+struct LightTxPayload {
     Line line;
-};
-
-struct L1ESPRxPayload {
-    L1ESPMode mode = L1ESPMode::Default;
-    bool activateSolenoid = false;
 };
 
 struct L2ESPTxPayload {
@@ -65,19 +60,13 @@ struct CameraTxPayload {
     Vector yellowGoal;
 };
 
-union L1ESPTxPayloadUnion {
-    L1ESPTxPayload data;
-    byte bytes[sizeof(L1ESPTxPayload)];
+union LightTxPayloadUnion {
+    LightTxPayload data;
+    byte bytes[sizeof(LightTxPayload)];
 
-    L1ESPTxPayloadUnion() : data() {}
+    LightTxPayloadUnion() : data() {}
 };
 
-union L1ESPRxPayloadUnion {
-    L1ESPRxPayload data;
-    byte bytes[sizeof(L1ESPRxPayload)];
-
-    L1ESPRxPayloadUnion() : data() {}
-};
 
 union L2ESPTxPayloadUnion {
     L2ESPTxPayload data;

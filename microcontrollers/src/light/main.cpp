@@ -12,17 +12,7 @@ PacketSerial TeensyPacketSerial;
 L1ESPMode mode;
 std::array<uint8_t, PHOTODIODE_COUNT> photodiodeActivationCount; // default to 0
 
-void onTeensyPacket(const byte *buf, size_t size) {
-    // Read the payload
-    L1ESPRxPayloadUnion payload;
-    // Don't continue if the payload is invalid
-    if (size != sizeof(payload)) return;
-    std::copy(buf, buf + size, std::begin(payload.bytes));
 
-    // Handle the payload
-    mode = payload.data.mode;
-    digitalWrite(PIN_SOLENOID, payload.data.activateSolenoid);
-}
 
 void setup() {
     // Turn the LED on until setup is complete
@@ -32,15 +22,12 @@ void setup() {
     // Initialise serial
     TeensySerial.begin(SHARED_BAUD_RATE);
     TeensyPacketSerial.setStream(&TeensySerial);
-    TeensyPacketSerial.setPacketHandler(&onTeensyPacket);
 
     // Initialise the light ring
     analogReadResolution(12);
     for (auto mux : muxs) mux.init();
 
-    // Initialise solenoid
-    pinMode(PIN_SOLENOID, OUTPUT);
-    digitalWrite(PIN_SOLENOID, LOW); // just in case lol
+
 
     // Turn the LED off
     digitalWrite(PIN_LED, LOW);
@@ -76,7 +63,7 @@ void defaultLoop(bool sendPacket = true, bool debugPrint = false) {
 
     if (sendPacket) {
         // Package data into a payload object and send it out to the Teensy
-        L1ESPTxPayloadUnion txPayload;
+        LightTxPayloadUnion txPayload;
         txPayload.data.line.angleBisector = line.first;
         txPayload.data.line.depth = line.second;
         TeensyPacketSerial.send(txPayload.bytes, sizeof(txPayload.bytes));
@@ -84,23 +71,24 @@ void defaultLoop(bool sendPacket = true, bool debugPrint = false) {
 }
 
 void loop() {
-    // Read serial packets
-    TeensyPacketSerial.update();
+    // mode = L1ESPMode::PrintLightRing;
 
-    // The Teensy can set this ESP to different modes
-    switch (mode) {
-    case L1ESPMode::Default:
-        defaultLoop();
-        break;
-    case L1ESPMode::PrintLightRing:
-        defaultLoop(false, true);
-        break;
-    case L1ESPMode::PrintLoopTime:
-        defaultLoop(false, false);
-        printLoopTime(TeensySerial, 50);
-        break;
-    case L1ESPMode::CalibrateLightRing:
-        printLightRingCalibration();
-        break;
-    }
+    // // The Teensy can set this ESP to different modes
+    // switch (mode) {
+    // case L1ESPMode::Default:
+    //     defaultLoop();
+    //     break;
+    // case L1ESPMode::PrintLightRing:
+    //     defaultLoop(false, true);
+    //     break;
+    // case L1ESPMode::PrintLoopTime:
+    //     defaultLoop(false, false);
+    //     printLoopTime(TeensySerial, 50);
+    //     break;
+    // case L1ESPMode::CalibrateLightRing:
+    //     printLightRingCalibration();
+    //     break;
+    // }
+    TeensySerial.println(readPhotodiode(0));
+    delay(1000);    
 }

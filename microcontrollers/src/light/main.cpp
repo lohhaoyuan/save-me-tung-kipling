@@ -71,24 +71,24 @@ void defaultLoop(bool sendPacket = true, bool debugPrint = false) {
 }
 
 void loop() {
-    // mode = L1ESPMode::PrintLightRing;
+    mode = L1ESPMode::CalibrateLightRing;
 
-    // // The Teensy can set this ESP to different modes
-    // switch (mode) {
-    // case L1ESPMode::Default:
-    //     defaultLoop();
-    //     break;
-    // case L1ESPMode::PrintLightRing:
-    //     defaultLoop(false, true);
-    //     break;
-    // case L1ESPMode::PrintLoopTime:
-    //     defaultLoop(false, false);
-    //     printLoopTime(TeensySerial, 50);
-    //     break;
-    // case L1ESPMode::CalibrateLightRing:
-    //     printLightRingCalibration();
-    //     break;
-    // }
+    // The Teensy can set this ESP to different modes
+    switch (mode) {
+    case L1ESPMode::Default:
+        defaultLoop();
+        break;
+    case L1ESPMode::PrintLightRing:
+        defaultLoop(false, true);
+        break;
+    case L1ESPMode::PrintLoopTime:
+        defaultLoop(false, false);
+        printLoopTime(TeensySerial, 50);
+        break;
+    case L1ESPMode::CalibrateLightRing:
+        printLightRingCalibration();
+        break;
+    }
     TeensySerial.println(readPhotodiode(0));
     delay(1000);    
 }

@@ -21,6 +21,7 @@ void Mux::selectChannel(uint8_t channel) const {
     digitalWrite(_s1, channel & 0b0010);
     digitalWrite(_s2, channel & 0b0100);
     digitalWrite(_s3, channel & 0b1000);
+
 }
 
 // Selects the channel on the multiplexer and reads the value from the channel,

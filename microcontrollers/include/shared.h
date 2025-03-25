@@ -12,25 +12,25 @@
 #define SHARED_BAUD_RATE  1000000 // this is used between microcontrollers
 #define MONITOR_BAUD_RATE 115200
 
-// ESP modes
+// // ESP modes
 
-enum class L1ESPMode {
-    Default,
-    // Debug
-    PrintLightRing,
-    PrintLoopTime,
-    // Calibration
-    CalibrateLightRing,
-};
+// enum class L1ESPMode {
+//     Default,
+//     // Debug
+//     PrintLightRing,
+//     PrintLoopTime,
+//     // Calibration
+//     CalibrateLightRing,
+// };
 
-enum class L2ESPMode {
-    Default,
-    // Debug
-    PrintIRRing,
-    PrintLoopTime,
-    // Calibration
-    CalibrateIRRing,
-};
+// enum class L2ESPMode {
+//     Default,
+//     // Debug
+//     PrintIRRing,
+//     PrintLoopTime,
+//     // Calibration
+//     CalibrateIRRing,
+// };
 
 // Sensor reading objects
 
@@ -43,50 +43,49 @@ struct Line {
 
 // Serial payloads
 
-struct LightTxPayload {
-    Line line;
+// struct LightTxPayload {
+//     Line line;
+// };
+
+// struct L2ESPTxPayload {
+//     Vector ball;
+// };
+
+// struct L2ESPRxPayload {
+//     L2ESPMode mode = L2ESPMode::Default;
+// };
+
+struct CameraPayload {
+    int data[6];
 };
 
-struct L2ESPTxPayload {
-    Vector ball;
-};
+// union LightTxPayloadUnion {
+//     LightTxPayload data;
+//     byte bytes[sizeof(LightTxPayload)];
 
-struct L2ESPRxPayload {
-    L2ESPMode mode = L2ESPMode::Default;
-};
-
-struct CameraTxPayload {
-    Vector blueGoal;
-    Vector yellowGoal;
-};
-
-union LightTxPayloadUnion {
-    LightTxPayload data;
-    byte bytes[sizeof(LightTxPayload)];
-
-    LightTxPayloadUnion() : data() {}
-};
+//     LightTxPayloadUnion() : data() {}
+// };
 
 
-union L2ESPTxPayloadUnion {
-    L2ESPTxPayload data;
-    byte bytes[sizeof(L2ESPTxPayload)];
+// union L2ESPTxPayloadUnion {
+//     L2ESPTxPayload data;
+//     byte bytes[sizeof(L2ESPTxPayload)];
 
-    L2ESPTxPayloadUnion() : data() {}
-};
+//     L2ESPTxPayloadUnion() : data() {}
+// };
 
-union L2ESPRxPayloadUnion {
-    L2ESPRxPayload data;
-    byte bytes[sizeof(L2ESPRxPayload)];
+// union L2ESPRxPayloadUnion {
+//     L2ESPRxPayload data;
+//     byte bytes[sizeof(L2ESPRxPayload)];
 
-    L2ESPRxPayloadUnion() : data() {}
-};
+//     L2ESPRxPayloadUnion() : data() {}
+// };
 
-union CameraTxPayloadUnion {
-    CameraTxPayload data;
-    byte bytes[sizeof(CameraTxPayload)];
+// union CameraTxPayloadUnion {
+//     CameraTxPayload data;
+//     byte bytes[sizeof(CameraTxPayload)];
 
-    CameraTxPayloadUnion() : data() {}
-};
+//     CameraTxPayloadUnion() : data() {}
+// };
 
 #endif // SHARED_H

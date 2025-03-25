@@ -134,7 +134,7 @@ RGB_GAIN = (-7.0, -7.0, -1.0)
 BLUE_THRESHOLDS = [(20, 54, -128, -3, -128, -11)]
 YELLOW_THRESHOLDS = [(61, 100, -15, 127, 17, 127)]
 # GAIN = 20
-EXPOSURE = 8000
+EXPOSURE = 1775
 # ---------- sus field -------
 # BLUE_THRESHOLDS = [(29, 53, -128, 6, -128, -16)]
 # YELLOW_THRESHOLDS = [(50, 100, -21, 127, 33, 127)]
@@ -195,7 +195,7 @@ sensor.set_vflip(VFLIP)
 sensor.set_transpose(TRANSPOSE)
 sensor.skip_frames(time=1000)
 
-sensor.set_auto_gain(False, gain_db=GAIN)
+sensor.set_auto_gain(False, gain_db=17)
 sensor.set_auto_exposure(False, exposure_us=EXPOSURE)
 sensor.set_auto_whitebal(
     False, rgb_gain_db=RGB_GAIN

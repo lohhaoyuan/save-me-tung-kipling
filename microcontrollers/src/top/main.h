@@ -28,14 +28,26 @@ struct Sensors{
     Vector blue;
     Vector yellow;
     int lidarDist[4];
+    double lidarConfidence[4]
     double yaw;
+    Point robot_position;
 };
 
-// extern Sensors sensors;
-// extern PacketSerial BluetoothPacketSerial;
-// extern PacketSerial SubPacketSerial;
-// extern PacketSerial LidarPacketSerial;
-// extern PacketSerial CameraPacketSerial;
+struct Processed {
+    Vector ball;
+    Vector blue;
+    Vector yellow;
+    int lidarDist[4];
+    double lidarConfidence[4]
+    double yaw;
+    Point robot_position;
+};
+
+extern Sensors sensors;
+extern PacketSerial BluetoothPacketSerial;
+extern PacketSerial SubPacketSerial;
+extern PacketSerial LidarPacketSerial;
+extern PacketSerial CameraPacketSerial;
 
 // functions
 

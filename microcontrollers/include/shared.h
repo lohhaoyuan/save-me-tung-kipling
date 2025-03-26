@@ -43,29 +43,22 @@ struct Line {
 
 // Serial payloads
 
-// struct LightTxPayload {
-//     Line line;
-// };
-
-// struct L2ESPTxPayload {
-//     Vector ball;
-// };
-
-// struct L2ESPRxPayload {
-//     L2ESPMode mode = L2ESPMode::Default;
-// };
-
+struct LightTxPayload {
+    Line line;
+};
 struct CameraPayload {
     int data[6];
 };
 
-// union LightTxPayloadUnion {
-//     LightTxPayload data;
-//     byte bytes[sizeof(LightTxPayload)];
-
-//     LightTxPayloadUnion() : data() {}
-// };
-
+struct SesbianLexPayload {
+    Vector ball;
+    Vector blue;
+    Vector yellow;
+    int lidarDist[4];
+    double lidarConfidence[4];
+    double yaw;
+    Point robot_position;
+}; // teensy payload
 
 // union L2ESPTxPayloadUnion {
 //     L2ESPTxPayload data;

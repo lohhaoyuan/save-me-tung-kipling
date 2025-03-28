@@ -17,7 +17,8 @@ void setup(){
 }
 
 void loop(){
-    if(LidarSerial.available()>0){
-        Serial.print(LidarSerial.read());
+    SubSerial.print("ping from top serial");
+    if(SubSerial.available()>0){
+        Serial.write(SubSerial.read());
     }    
 }

@@ -8,7 +8,6 @@
 #include "vector.h"
 #include "util.h"
 #include <Servo.h>
-
 // SERIAL OBJECTS
 extern PacketSerial LightPacketSerial; 
 extern PacketSerial TopPacketSerial; // teensy teensy
@@ -27,7 +26,7 @@ void EncoderPacketHandler(const byte *buf, size_t size);
 #define FrontESCpin 9
 #define BackESCpin 6
 #define FLAG1 13
-
+#define FLAG2 22
 
 struct Processed{
     Vector ball;

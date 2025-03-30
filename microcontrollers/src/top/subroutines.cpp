@@ -1,34 +1,71 @@
 #include "main.h"
 
-// Packet Handlers
-// void CameraPacketHandler(const byte *buf, size_t size){
-//     CameraPayload payload;
-//     memcpy(&payload, buf, sizeof(payload));
-//     #ifdef BLUE
-//     sensors.blue.angle =
-//         payload.data[0];
-//     sensors.blue.distance =
-//         payload.data[1];
-//     sensors.yellow.angle =
-//         payload.data[2];
-//     sensors.yellow.distance =
-//         payload.data[3];
-//     #endif
-//     #ifdef YELLOW
-//     sensors.yellow.angle =
-//         payload.data[0];
-//     sensors.yellow.distance =
-//         payload.data[1];
-//     sensors.blue.angle =
-//         payload.data[2];
-//     sensors.blue.distance =
-//         payload.data[3];
-//     #endif
-//     sensors.cam_ball.angle = payload.data[4];
-//     sensors.cam_ball.distance = payload.data[5];
+// Localisaation
+double ballMirrorRegress(double distance){
+    return (1.91653705 * powf(10, -7) * powf(distance, 5) -
+    6.07403517 * powf(10, -5) * powf(distance, 4) +
+    7.34613337 * powf(10, -3) * powf(distance, 3) -
+    4.15046723 * powf(10, -1) * powf(distance, 2) +
+    1.12502900 * powf(10, 1) * distance -
+    1.01032228 * powf(10, 2));
+}
 
-// }
+void CameraPacketHandler(const byte *buf, size_t size){
+    CameraPayload payload;
+    memcpy(&payload, buf, sizeof(payload));
+    #ifdef YELLOW_ATTACK
+    sensors.blue.angle =
+        payload.data[0];
+    sensors.blue.distance =
+        payload.data[1];
+    sensors.yellow.angle =
+        payload.data[2];
+    sensors.yellow.distance =
+        payload.data[3];
+    #endif
+    #ifdef BLUE_ATTACK
+    sensors.yellow.angle =
+        payload.data[0];
+    sensors.yellow.distance =
+        payload.data[1];
+    sensors.blue.angle =
+        payload.data[2];
+    sensors.blue.distance =
+        payload.data[3];
+    #endif
+    sensors.cam_ball.angle = payload.data[4];
+    sensors.cam_ball.distance = payload.data[5];
+    sensors.cam_ball.distance =
+        ballMirrorRegress(sensors.cam_ball.distance);
+    
+}
 
+Vector centreVectorAtk(){
+    const Vector realGoalToCenter = {0, 113.5};
+    const Vector yellow_goalactualposition = {
+        sensors.yellow.angle -
+            sensors.yaw,
+        sensors.yellow.distance};
+    const auto fakeCenter = - yellow_goalactualposition + realGoalToCenter;
+    Vector actualCenter = {clipAngleTo180(fakeCenter.angle),
+                           fakeCenter.distance};
+    return actualCenter;
+}
+Vector centreVectorDef(){
+    const Vector realGoalToCenter = {0, 113.5};
+    const Vector yellow_goalactualposition = {
+        sensors.yellow.angle -
+            sensors.yaw,
+        sensors.yellow.distance};
+    const auto fakeCenter = - yellow_goalactualposition + realGoalToCenter;
+    Vector actualCenter = {clipAngleTo180(fakeCenter.angle),
+                           fakeCenter.distance};
+    return actualCenter;
+}
+
+Vector centreVectorBoth(){
+    return (centreVectorAtk() + centreVectorDef()) / 2;
+}
 // IMU 
 Adafruit_BNO08x bno(IMU_RST);
 Eigen::Quaterniond initialRotationOffset = Eigen::Quaterniond::Identity();
@@ -47,13 +84,6 @@ void setupIMU(){
     }   
     Serial.println("Game vector enabled");
     Serial.println("Reports set");
-}
-void setIMUReports(){
-
-    Serial.println("Setting desired reports");
-    
-
-      
 }
 
 double readIMUHeading() {
@@ -84,3 +114,4 @@ double readIMUHeading() {
     }
     return NAN;
 }
+

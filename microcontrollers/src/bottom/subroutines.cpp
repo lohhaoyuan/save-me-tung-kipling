@@ -1,5 +1,4 @@
 #include "main.h"
-Servo FrontESC;
 
 void setupDribblers(){
     FrontESC.attach(FrontESCpin);

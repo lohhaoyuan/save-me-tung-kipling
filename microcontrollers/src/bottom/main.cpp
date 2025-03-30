@@ -1,6 +1,10 @@
 #include <Arduino.h>
 #include "main.h"
 #include "config.h"
+
+Servo FrontESC;
+
+
 void setup(){
     Serial.begin(MONITOR_BAUD_RATE);
 

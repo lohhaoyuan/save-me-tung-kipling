@@ -11,6 +11,7 @@
 #include "shared.h"
 #include "vector.h"
 #include "config.h"
+#include "util.h"
 // Pins and Serial
 #define IMU_CS 10
 #define IMU_INT 14
@@ -28,7 +29,7 @@ struct Sensors{
     Vector blue;
     Vector yellow;
     int lidarDist[4];
-    double lidarConfidence[4]
+    double lidarConfidence[4];
     double yaw;
     Point robot_position;
 };
@@ -38,7 +39,7 @@ struct Processed {
     Vector blue;
     Vector yellow;
     int lidarDist[4];
-    double lidarConfidence[4]
+    double lidarConfidence[4];
     double yaw;
     Point robot_position;
 };
@@ -57,9 +58,14 @@ void SubPacketHandler(const byte *buf, size_t size);
 void CameraPacketHandler(const byte *buf, size_t size);
 void LidarPacketHandler(const byte *buf, size_t size);
 
-
-
 // IMU
 void setupIMU();
 double readIMUHeading();
+
+// localisation
+double ballMirrorRegress(double distance);
+Vector centreVectorAtk();
+Vector centreVectorDef();
+Vector centreVectorBoth();
+Vector localise();
 #endif

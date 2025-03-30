@@ -1,5 +1,13 @@
 #include "main.h"
 
+Sensors sensors;
+PacketSerial BluetoothPacketSerial;
+PacketSerial SubPacketSerial;
+PacketSerial LidarPacketSerial;
+PacketSerial CameraPacketSerial;
+
+
+
 void setup(){
     Serial.begin(MONITOR_BAUD_RATE);
     BluetoothSerial.begin(SHARED_BAUD_RATE);
@@ -10,15 +18,11 @@ void setup(){
     // BluetoothPacketSerial.setStream(&BluetoothSerial);
     // SubPacketSerial.setStream(&SubSerial);
     // LidarPacketSerial.setStream(&LidarSerial);
-    // // CameraPacketSerial.setStream(&CameraSerial);
-    // CameraPacketSerial.setPacketHandler(&CameraPacketHandler);
-
+    CameraPacketSerial.setStream(&CameraSerial);
+    CameraPacketSerial.setPacketHandler(&CameraPacketHandler);
     setupIMU();
 }
 
 void loop(){
-    SubSerial.print("ping from top serial");
-    if(SubSerial.available()>0){
-        Serial.write(SubSerial.read());
-    }    
+    delay(100);
 }

@@ -26,6 +26,7 @@ void setup(){
 }
 
 void loop(){
+
     for (int i = 100; i<200; i++){
         digitalWrite(M1_DIR,HIGH);
         digitalWrite(M2_DIR,HIGH);
@@ -35,10 +36,10 @@ void loop(){
         analogWrite(M2_PWM, i);
         analogWrite(M3_PWM, i);
         analogWrite(M4_PWM, i);
-        delay(5);
+        delay(24);
 
     }
-    delay(5);
+    delay(50);
     for (int i = 100; i<200; i++){
         digitalWrite(M1_DIR,LOW);
         digitalWrite(M2_DIR,LOW);
@@ -48,7 +49,7 @@ void loop(){
         analogWrite(M2_PWM, i);
         analogWrite(M3_PWM, i);
         analogWrite(M4_PWM, i);
-        delay(5);
+        delay(24);
 
     }
 }

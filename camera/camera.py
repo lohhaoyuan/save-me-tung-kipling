@@ -1,273 +1,469 @@
 import time
-import math
-import struct
-
-import ulab
-import image
-import sensor
 from pyb import UART, LED
+import math
+import sensor, image, time, struct
+from math import *
+import ulab
+
 from ulab import numpy as np
+import omv
 
+#omv.disable_fb(True)
+np_dot = np.dot
+print( "version", ulab.__version__ )
+led = LED(2) # green led
+led.off()
+serial = UART(3,500000)
+'''Extended Kalman Filter for smoother  ball following'''
 
-# --------------------------------------------- CONFIG ---------------------------------------------
+class KalmanFilter:
+    def __init__(self, F = None, B = None, H = None, Q = None, R = None, P = None, x0 = None):
+        if(F is None or H is None):
+            raise ValueError("Set proper system dynamics.")
+        self.n = F.shape[1]
+        self.m = H.shape[1]
+        self.F = F
+        self.H = H
+        #self.B = np.zeros(1, dtype=np.float) if B is None else B
+        self.Q = np.eye(self.n, dtype=np.float) if Q is None else Q
+        self.R = np.eye(self.n, dtype=np.float) if R is None else R
+        self.P = np.zeros((self.n, self.n)) if P is None else P
+        self.x = [[0], [0], [0], [0], [0], [0]]
+    def predict(self):
+        self.x = np_dot( self.F, self.x ) #+ np_dot( self.B, u )
+        self.P = np_dot(np_dot(self.F, self.P), self.F.transpose().copy()) + self.Q
+        return self.x
+    def update(self, z):
+        y = z - np_dot( self.H, self.x )
+        S = self.R + np_dot( self.H, np_dot( self.P, self.H.transpose().copy() ) )
+        K = np_dot( np_dot( self.P, self.H.transpose().copy() ), np.linalg.inv(S) )
+        self.x = self.x + np_dot( K, y )
+        I = np.eye( self.n )
+        self.P = np_dot( np_dot( I - np_dot( K, self.H ), self.P ),
+            (I - np_dot( K, self.H ) ).transpose().copy() ) + np_dot( np_dot( K, self.R ), K.transpose().copy() )
+        return self.x
 
-DEBUG_CAMERA = True
-
-# Camera system
-# ----- OLDBOT -----
-CAMERA_CENTER = np.array((159, 140))
-CAMERA_ROI = (32, 14, 244, 227)
-HMIRROR = True
-VFLIP = False
-TRANSPOSE = False
-"""
-0 6
-10 10
-20 17
-30 24
-40 40
-50 51
-60 58
-70 65
-80 68
-90 72
-100 76
-110 79
-120 83
-130 84
-140 90
-150 92
-160 95
-170 99
-180 100
-190 101
-200 102
-"""
-DISTANCE_COEFFICIENTS = np.array(
-    [-3.49578147e-06, 1.03941994e-03, -8.13682248e-02, 3.22518576e00, -1.57496452e01],
-    # [ 9.53340581e-05, -1.11504149e-02,  9.92479690e-01,  1.75040766e+00]
-    # [2.45641451e-06, -4.13791515e-04, 2.54199085e-02, 1.71702709e-01, -7.67467924e-02]
-)
-# ----- NEWBOT -----
-# CAMERA_CENTER = np.array((146, 157))
-# CAMERA_ROI = (0, 0, 240, 320)
-## CAMERA_CENTER = np.array((125, 177))
-## CAMERA_ROI = (19, 76, 210, 210)
-# HMIRROR = False
-# VFLIP = False
-# TRANSPOSE = True
-# """
-# 0 12
-# 10 13
-# 20 50
-# 30 66
-# 40 75
-# 50 86
-# 60 98
-# 70 103
-# 80 109
-# 90 113
-# 100 117
-# 110 120
-# 120 124
-# 130 124
-# 140 126
-# 150 128
-# 160 131
-# 170 131
-# 180 132
-# 190 133
-# 200 133
-# """
-# DISTANCE_COEFFICIENTS = np.array(
-# [ 1.17041523e-09, -4.21577792e-07,  5.77787509e-05, -3.65929209e-03,
-# 1.05876533e-01, -6.34293210e-01, -2.28222842e+00]
-# )
-# ------------------
-
-# Camera configuration
-GAIN = 20
-# RGB_GAIN = (-6, -20, -20)
-RGB_GAIN = (-7.0, -7.0, -1.0)
-# print(sensor.get_gain_db())
-# print(sensor.get_exposure_us() * 0.21)
-
-# Blob tracking
-# ----- Computer Lab 3 -----
-# BLUE_THRESHOLDS = [(35, 50, -10, 30, -70, -40)]
-# YELLOW_THRESHOLDS = [(50, 75, -30, 0, 40, 80)]
-# --------- AI Lab ---------
-# BLUE_THRESHOLDS = [(45, 65, -30, 5, -40, -10)]
-# YELLOW_THRESHOLDS = [(45, 80, 0, 40, 40, 80)]
-# ---------- Home ----------
-# BLUE_THRESHOLDS = [(25, 60, -15, 25, -60, -20)]
-# YELLOW_THRESHOLDS = [(50, 90, -20, 5, 40, 80)]
-# ---------- 318 ----------
-## oldbot
-# BLUE_THRESHOLDS = [(18, 33, -128, 15, -128, -3)]
-# YELLOW_THRESHOLDS = [(64, 100, -128, 127, 59, 127)]
-# EXPOSURE = 20000
-## newbot
-# BLUE_THRESHOLDS = [(0, 100, -128, 127, -128, -17)]
-# YELLOW_THRESHOLDS = [(58, 100, -44, 12, 52, 127)]
-# EXPOSURE = 20000
-# ---------- lw only practice field 1640 ----------
-# BLUE_THRESHOLDS = [(0, 60, -128, 127, -128, -10)]
-# YELLOW_THRESHOLDS = [(35, 100, -16, 127, 30, 127)]
-# GAIN = 20
-# EXPOSURE = 13000
-# ---------- lw only practice field 1130/1230 ----------
-# BLUE_THRESHOLDS = [(20, 35, -128, 127, -128, -8)]
-# YELLOW_THRESHOLDS = [(41, 100, -16, 127, 13, 127)]
-# GAIN = 20
-# EXPOSURE = 5000
-# ---------- match 1 1000 ----------
-## oldbot
-## newbot
-# BLUE_THRESHOLDS = [(0, 60, -36, -5, -128, -10)]
-# YELLOW_THRESHOLDS = [(63, 100, -13, 127, 33, 127)]
-##GAIN = 20
-# EXPOSURE = 13000
-# ---------- match 4 ----------
-## oldbot
-## newbot
-BLUE_THRESHOLDS = [(20, 54, -128, -3, -128, -11)]
-YELLOW_THRESHOLDS = [(61, 100, -15, 127, 17, 127)]
-# GAIN = 20
-EXPOSURE = 1775
-# ---------- sus field -------
-# BLUE_THRESHOLDS = [(29, 53, -128, 6, -128, -16)]
-# YELLOW_THRESHOLDS = [(50, 100, -21, 127, 33, 127)]
-##GAIN = 20
-# EXPOSURE = 9000
-#
-BLOB_MERGE = False
-BLOB_STRIDE = 1
-BLOB_PIXEL_THRESHOLD = 15
-BLOB_AREA_THRESHOLD = 15
-BLOB_MARGIN = 5
-
+# set dT at each processing step
 F = np.eye(6, dtype=np.float)
 B = 0
-H = np.array(
-    [
-        [1, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1],
-    ],
-    dtype=np.float,
-)
-# Q represents process noise
-# larger values reduce response time, smaller values reduce noise
-Q = np.array(
-    [
-        [1e-3, 0, 0, 0, 0, 0],
-        [0, 1e-2, 0, 0, 0, 0],
-        [0, 0, 1e-2, 0, 0, 0],
-        [0, 0, 0, 1e-2, 0, 0],
-        [0, 0, 0, 0, 1e-2, 0],
-        [0, 0, 0, 0, 0, 1e-3],
-    ],
-    dtype=np.float,
-)
-# R represents measurement noise
-# smaller values indicate greater measurement precision
-R = np.array(
-    [
-        [1e-3, 0, 0, 0],
-        [0, 1e-3, 0, 0],
-        [0, 0, 1e-3, 0],
-        [0, 0, 0, 1e-3],
-    ],
-    dtype=np.float,
-)
 
-# --------------------------------------------- SETUP ----------------------------------------------
+H = np.array([[1, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 0, 0, 1]],  dtype=np.float)
 
-LED(2).off()  # Turn off the green LED
+
+Q = np.array([[1e-2, 0, 0, 0, 0, 0],
+            [0, 1e-2, 0, 0, 0, 0],
+            [0, 0, 5.0 , 0, 0, 0],
+            [0, 0, 0, 5.0 , 0, 0],
+            [0, 0, 0, 0, 1e-2, 0],
+            [0, 0, 0, 0, 0, 1e-2]], dtype=np.float)
+
+R = np.array([[1e-1, 0, 0, 0],
+            [0, 1e-1, 0, 0,],
+            [0, 0, 1e-1, 0],
+            [0, 0, 0, 1e-1]], dtype=np.float)
+
+kf = KalmanFilter(F=F, B=B, H=H, Q=Q, R=R)
+
+
+
+setting = 'home'
+# setting = 'lab'
+
 
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_hmirror(HMIRROR)
-sensor.set_vflip(VFLIP)
-sensor.set_transpose(TRANSPOSE)
-sensor.skip_frames(time=1000)
+sensor.skip_frames(time = 2000)
+if setting == 'lab':
+    sensor.set_auto_gain(False, gain_db=17)
+    #easier to detect blue goal but harder to yellow goal and ball if gain is higher
+    #converse is true
+elif setting == 'home' :
+    sensor.set_auto_gain(False, gain_db=26)
 
-sensor.set_auto_gain(False, gain_db=17)
-sensor.set_auto_exposure(False, exposure_us=EXPOSURE)
-sensor.set_auto_whitebal(
-    False, rgb_gain_db=RGB_GAIN
-)  # Must be turned off for blob tracking
-sensor.set_brightness(0)
-sensor.set_contrast(3)
+
+print("1")
+curr_gain = sensor.get_gain_db()
+
+#sensor.set_auto_gain(False)
+# === EXPOSURE ===
+curr_exposure = sensor.get_exposure_us()
+print(curr_exposure * 0.21)
+print("2")
+# if tuning exposure
+#sensor.set_auto_exposure(False, exposure_us = 100000)
+
+LAB_EXPOSURE = 1775
+SC_EXPOSURE = 2000
+
+# sensor.set_auto_exposure(False, exposure_us = 1000)
+sensor.skip_frames(time = 1000)
+# === WHITE BAL ===
+#sensor.set_auto_whitebal(False, rgb_gain_db = (60, 60, 62)) #Must remain false for blob tracking
+#sensor.set_auto_whitebal(False, rgb_gain_db = (4, 4, 4))
+sensor.set_contrast(5)
 sensor.set_saturation(3)
+#sensor.set_auto_exposure(False, exposure_us = 101243) #101243+
+sensor.set_brightness(0)
+print("3")
 sensor.skip_frames(time=1000)
+print("4")
 
-# while True:
-# print(sensor.get_exposure_us())
-# img = sensor.snapshot()
+clock = time.clock()
 
-serial = UART(3, 1000000)
+ID = 'robot1'
+# ID = 'robot2'
 
-# -------------------------------------------- METHODS ---------------------------------------------
+centreAngleY = 121
+centreAngleX = 162
+centreY = 150
+centreX = 159
+CAMERA_CENTER = np.array((centreX,centreY))
 
 
-def pixels_to_cm(x):
-    return np.polyval(DISTANCE_COEFFICIENTS, [x])[0]
+if setting == 'lab':
+    red_thresh = [(0, 100, 21, 127, 14, 88)]
+    blue_thresh = [(0, 62, -128, 4, -128, -7)]
+    yellow_thresh = [(0, 100, -11, 127, 24, 127)]
+
+elif (setting == 'home'):
+    red_thresh = [(14, 31, 18, 23, 13, 29) ]
+    blue_thresh = [(15, 23, -13, -1, -128, -5)]
+    yellow_thresh = [(18, 39, -5, 10, 18, 31)]
+
+ROI = (0, 0, 320, 240)
 
 
-def find_object(img, lab_threshold, draw_color):
-    # Find blobs
-    blobs = img.find_blobs(
-        lab_threshold,
-        merge=BLOB_MERGE,
-        roi=CAMERA_ROI,
-        x_stride=BLOB_STRIDE,
-        y_stride=BLOB_STRIDE,
-        pixels_threshold=BLOB_PIXEL_THRESHOLD,
-        area_threshold=BLOB_AREA_THRESHOLD,
-        margin=BLOB_MARGIN,
-    )
 
-    # Find the largest blob
+
+dT = 0
+ballFound = False
+notFoundCount = 0
+
+"""
+0 0
+ZZ 32
+20 53
+30 64
+40 75
+50 83
+60 90
+70 95
+80 102
+90 105
+100 107
+110 108
+
+"""
+"""
+0 0
+10 24
+12 26
+13 30
+15 34
+17 38
+19 41
+22 46
+25 51
+28 55
+30 58
+33 62
+35 64
+40 69
+45 74
+50 77
+55 80
+60 83
+65 85
+70 87
+75 89
+80 91
+85 93
+90 94.5
+100 97
+110 99
+120 104
+160 106
+180 109"""
+
+
+# [ 1.19091531e-04 -1.03991140e-02  3.73862144e-01 -1.16801201e-01]
+# 0.83628731 -24.12546642
+def distanceMapper(pixel):
+    # use polynomial regression to map pixel distance to centimetre distance
+    polarity = pixel / abs(pixel) if pixel != 0 else 1
+    # use absolute value since polynomial equation is different for negative numbers
+    pixel = pixel
+
+    #return (-1.16801201e-01+
+           #(3.73862144e-01)  * pixel +
+           #(-1.03991140e-02 ) * pixel**2 +
+           #(1.19091531e-04) * pixel**3 ) * polarity
+    return pixel
+
+
+def distanceUnmapper(real):
+    # use polynomial regression to map centimetre distance back to pixel distance
+    polarity = real / abs(real) if real != 0 else 1
+    # use absolute value since polynomial equation is different for negative numbers
+    real = abs(real)
+    return (-4.92497614 +
+           (3.0761747478) * real +
+           (-0.0238111740) * real**2 +
+           (-0.0000109829) * real**3  +
+           (0.0000008785) * real**4 +
+           (-0.0000000027) * real**5 ) * polarity
+
+class obj:
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+
+        #for angle only
+        self.anglex = x
+        self.angley = y
+        self.w = w
+        self.h = h
+        self.area = w * h
+        self.angle = 500
+        self.dist = 500
+        self.unmappedDist = 0
+        self.confidence = 0
+
+    def centralise(self):
+        self.x -= centreX
+        self.y = centreY - self.y
+
+        self.anglex -= centreAngleX
+        self.angley = centreAngleY - self.angley
+
+
+    def process(self, mapDist = True):
+        # currently ball is mapped before finding angle, goals are not
+        # need to test to see if that makes a difference
+        self.angle = degrees(atan2(self.angley,self.anglex))
+        #if (self.x > 0 and self.y > 0):
+            #self.angle = self.angle
+        #elif (self.x > 0 and self.y < 0):
+            #self.angle = self.angle + 90;
+        #elif (self.x < 0 and self.y > 0):
+            #self.angle = self.angle + 270;
+        #elif (self.x < 0 and self.y < 0):
+            #self.angle = 180 + self.angle
+        #if self.angle < 0: self.angle += 360
+        self.unmappedDist = sqrt(self.x ** 2 + self.y ** 2)
+        if mapDist:
+            self.dist = distanceMapper(sqrt(self.x ** 2 + self.y ** 2))
+        else:
+            self.dist = sqrt(self.x ** 2 + self.y ** 2)
+
+        # ratio of distance to area should be fixed, allowing us to see if goal is obstructed.
+        if (self.dist != 0):
+            self.confidence = (self.area / self.dist) / 0.1
+
+
+def track_field(thresh, pixel_thresh, area_thresh, color = (255, 255, 255), debug=False, roi = (0, 0, 320, 240), stride = 1, margin = 1):
+    found_obj = None
+    found_blob = None
     max_area = 0
-    detected_blob = None
+    box = None
+    # more blobs means more things blocking the goal
+    num_blobs = 0
+    blobs = img.find_blobs(thresh, merge=True, roi = roi, x_stride = 5, y_stride = 5, pixels_threshold=pixel_thresh, area_threshold=area_thresh, margin = margin)
     for blob in blobs:
+        X = blob.cx()
+        Y = blob.cy()
+        #height = blob.h()
+        box = blob.rect()
+        for blob in blobs:
+            num_blobs += 1
         if blob.area() > max_area:
+            found_blob = blob
+
+
             max_area = blob.area()
-            detected_blob = blob
+            found_obj = obj(blob.cx(), blob.cy(), blob.w(), blob.h())
 
-    if not detected_blob:
-        return None
+        if debug and found_obj:
+            img.draw_rectangle(found_blob.rect(), color = color)
+            img.draw_cross(found_blob.cx(), found_blob.cy(), color = color)
+            #img.draw_line(centreX, found_blob.cy(), centreY, found_blob.cx(), color=color)
+            found_obj.confidence = 1/num_blobs
+        #img.draw_rectangle(box, color = color)
 
-    # Find the base of the blob
-    mal = detected_blob.minor_axis_line()
-    base1 = np.array(mal[0:2])
-    base2 = np.array(mal[2:4])
-    base1 -= CAMERA_CENTER
-    base2 -= CAMERA_CENTER
-    base1_distance = math.sqrt(base1[0] ** 2 + base1[1] ** 2)
-    base2_distance = math.sqrt(base2[0] ** 2 + base2[1] ** 2)
-    position = base1 if base1_distance < base2_distance else base2
-    distance = base1_distance if base1_distance < base2_distance else base2_distance
-
-    # Annotate the blob if we're debugging
-    if DEBUG_CAMERA:
-        img.draw_ellipse(detected_blob.enclosed_ellipse(), color=draw_color)
-        absolute_position = CAMERA_CENTER + position
-        img.draw_cross(
-            int(absolute_position[0]), int(absolute_position[1]), color=draw_color
-        )
-
-    # Find the relative polar coordinates of the object
-    angle = (math.degrees(math.atan2(position[1], position[0])) + 90) % 360
-    distance = pixels_to_cm(distance)
-
-    return angle, distance
+        #img.draw_cross(X, Y, color = color)
 
 
+def track_obj(thresh, pixel_thresh, area_thresh, color = (255, 255, 255), debug=False, stride = 5, margin = 0, merge = False):
+    found_obj = None
+    found_blob = Nonex
+    max_area = 0
+    box = None
+    # more blobs means more things blocking the goal
+    num_blobs = 0
+    blobs = img.find_blobs( [(0, 100, 22, 127, -128, 127)], merge=merge, roi = ROI, x_stride = stride, y_stride = stride, pixels_threshold=pixel_thresh, area_threshold=area_thresh, margin = margin)
+    for blob in blobs:
+        num_blobs += 1
+        if blob.area() > max_area:
+            found_blob = blob
+
+
+            max_area = blob.area()
+            found_obj = obj(blob.cx(), blob.cy(), blob.w(), blob.h())
+
+    if debug and found_obj:
+        img.draw_rectangle(found_blob.rect(), color = color)
+        img.draw_cross(found_blob.cx(), found_blob.cy(), color = color)
+        #img.draw_line(centreX, found_blob.cy(), centreY, found_blob.cx(), color=color)
+        found_obj.confidence = 1/num_blobs
+
+    return found_obj
+
+def track_goal(thresh, pixel_thresh, area_thresh, color = (255, 255, 255), debug=False, stride = 5, margin = 0, merge = False):
+    found_obj = None
+    found_blob = None
+    max_area = 0
+    box = None
+    # more blobs means more things blocking the goal
+    num_blobs = 0
+    blobs = img.find_blobs(thresh, merge=merge, roi = ROI, x_stride = stride, y_stride = stride, pixels_threshold=pixel_thresh, area_threshold=area_thresh, margin = margin)
+    for blob in blobs:
+        num_blobs += 1
+        if blob.area() > max_area:
+            found_blob = blob
+
+
+            max_area = blob.area()
+            found_obj = obj(blob.cx(), blob.cy(), blob.w(), blob.h())
+
+    if debug and found_obj:
+        img.draw_rectangle(found_blob.rect(), color = color)
+        img.draw_cross(found_blob.cx(), found_blob.cy(), color = color)
+        #img.draw_line(centreX, found_blob.cy(), centreY, found_blob.cx(), color=color)
+        found_obj.confidence = 1/num_blobs
+
+    return found_obj
+
+
+
+def find_objects(debug=False):
+    global ballFound
+    global notFoundCount
+    predBall = None
+    img.draw_cross(centreX, centreY, color = (255, 255, 255))
+    ball = track_goal(red_thresh, 1, 1, color = (0, 255, 0), stride = 1, debug =  debug, merge = False, margin = 0)
+    blue = track_goal(blue_thresh, 10, 10, color = (0, 0, 255), stride = 2,  debug = debug, merge = True, margin = 5)
+    yellow = track_goal(yellow_thresh, 10, 10, color = (255, 0, 0), stride = 5, debug =  debug, merge = False, margin = 0)
+
+    if ballFound:
+        kf.F[0][2] = dT
+        kf.F[1][3] = dT
+
+        state = kf.predict()
+        predW = state[4][0]
+        predH = state[5][0]
+        predX = state[0][0]
+        predY = state[1][0]
+        predBall = obj(predX, predY, predW, predH)
+        predBall.process(mapDist = False)
+
+        if debug:
+            debugPredX = centreX + distanceUnmapper(predX)
+            debugPredY = centreY - distanceUnmapper(predY)
+
+
+            #predRect = (int(debugPredX - predH / 2), int(debugPredY - predW / 2), int(predW), int(predH))
+            #img.draw_rectangle(predRect, color = (0, 255, 255))
+            #img.draw_cross(int(debugPredX), int(debugPredY), color = (0, 255, 255))
+
+
+        # ball not detected but was recently seen
+
+    if ball:
+        notFoundCount = 0
+        # map pixel dist to real dist so kalman filter can track ball more accurately
+        #print(ball.x, ball.y)
+        ball.centralise()
+        ball.x = distanceMapper(ball.x)
+        ball.y = distanceMapper(ball.y)
+
+        z = np.array([[ball.x], [ball.y], [ball.w], [ball.h]], dtype=np.float)
+        ball.process(mapDist = False)
+
+        if not ballFound:
+            # first detection!
+            kf.P = np.eye(kf.F.shape[1])
+            kf.x = np.array([z[0],z[1], [0], [0], z[2], z[3]], dtype=np.float)
+
+            ballFound = True
+        else:
+            kf.update(z)
+    else:
+        # ball not detected
+        notFoundCount += 1
+        if notFoundCount >= 100:
+            ballFound = False
+
+
+
+    # create dummy objects if the object is not detected
+    if yellow:
+        yellow.centralise()
+        yellow.process()
+        #print(f"Yellow pixel dist: {yellow.x} ")
+        #if debug:
+            #print(f"Yellow Goal: Angle: {yellow.angle} Distance: {yellow.dist} Pixel Distance: {yellow.unmappedDist}")
+    else:
+        yellow = obj(0, 0, 0, 0)
+
+    if blue:
+        blue.centralise()
+        blue.process()
+        #print(f"blue pixel dist: {blue.y} ")
+
+        #if debug:
+            #print(f"Blue Goal: Angle: {blue.angle} Distance: {blue.dist} Pixel Distance: {blue.unmappedDist}")
+    else:
+        blue = obj(0, 0, 0, 0)
+        #if debug:
+            #print(f"Blue Goal not detected!")
+
+    if ball:
+        if debug:
+            print(f"Ball: Angle: {ball.angle} Distance: {ball.dist}")
+            pass
+    else:
+        ball = obj(0, 0, 0, 0)
+
+    if predBall:
+        if debug:
+            #print(f"Predicted Ball: Angle: {predBall.angle} Distance: {predBall.dist}")
+            pass
+    else:
+        predBall = obj(0, 0, 0, 0)
+
+
+    #return [ball.angle, ball.dist, predBall.angle, predBall.dist, blue.angle, blue.dist, yellow.angle, yellow.dist]
+    return [blue.angle, blue.dist, yellow.angle, yellow.dist, ball.angle , ball.dist]
+
+def send(data):
+    sendData = [42]
+
+    for num in data:
+        # convert from 2dp float to int
+        num = int(round(num, 2) * 100)
+
+
+        sendData += list(num.to_bytes(2, 'little'))
+
+    for num in sendData:
+        try:
+            uart.writechar(num)
+        except:
+            pass
 def cobs_encode(input_bytes):
     read_index = 0
     write_index = 1
@@ -300,119 +496,44 @@ def cobs_encode(input_bytes):
 
     return output_bytes[:write_index]
 
+while(True):
+    debug = False
+    debug = True
 
-# class KalmanFilter:
-# def __init__(self, F=None, B=None, H=None, Q=None, R=None, P=None, x0=None) -> None:
-# if F is None or H is None:
-# raise ValueError("Set proper system dynamics.")
-
-## Initialise parameters
-# self.n = F.shape[1]
-# self.m = H.shape[1]
-# self.F = F
-# self.H = H
-## self.B = np.zeros(1, dtype=np.float) if B is None else B
-# self.Q = np.eye(self.n, dtype=np.float) if Q is None else Q
-# self.R = np.eye(self.n, dtype=np.float) if R is None else R
-# self.P = np.zeros((self.n, self.n)) if P is None else P
-# self.x = None
-
-# self._last_time = None
-
-# def predict(self) -> np.ndarray:
-## Compute dt at each prediction step
-# if self._last_time is None:
-# self._last_time = time.time()
-# return None
-# current_time = time.time()
-# dt = current_time - self._last_time
-# self._last_time = current_time
-# self.F[0][2] = dt
-# self.F[1][3] = dt
-
-## Predict
-# self.x = np.dot(self.F, self.x)  # + np_dot( self.B, u )
-# self.P = np.dot(np.dot(self.F, self.P), self.F.transpose().copy()) + self.Q
-# return self.x
-
-# def update(self, z) -> None:
-## Initialise parameters if it's the first update
-# if self.P is None:
-# self.P = np.eye(self.F.shape[1])
-# if self.x is None:
-# self.x = np.array([z[0], z[1], [0], [0], z[2], z[3]], dtype=np.float)
-
-## Update state
-# y = z - np.dot(self.H, self.x)
-# S = self.R + np.dot(self.H, np.dot(self.P, self.H.transpose().copy()))
-# K = np.dot(np.dot(self.P, self.H.transpose().copy()), np.linalg.inv(S))
-# self.x = self.x + np.dot(K, y)
-# I = np.eye(self.n)
-# self.P = np.dot(
-# np.dot(I - np.dot(K, self.H), self.P),
-# (I - np.dot(K, self.H)).transpose().copy(),
-# ) + np.dot(np.dot(K, self.R), K.transpose().copy())
+    clock.tick()
+    img = sensor.snapshot()
 
 
-# ---------------------------------------------- LOOP ----------------------------------------------
+    dT = 1/clock.fps()
 
-
-# blue_goal_filter = KalmanFilter(F=F, B=B, H=H, Q=Q, R=R)
-# yellow_goal_filter = KalmanFilter(F=F, B=B, H=H, Q=Q, R=R)
-blue_goal_not_found_count = 0
-yellow_goal_not_found_count = 0
-endurance = 100
-while True:
-    try:
-        img = sensor.snapshot()
-    except RuntimeError:
-        continue
-
-    blue_goal = find_object(img, BLUE_THRESHOLDS, (0, 0, 255))
-    yellow_goal = find_object(img, YELLOW_THRESHOLDS, (0, 255, 0))
-    # if blue_goal:
-    # blue_goal_filter.update(np.array([[blue_goal[0]], [blue_goal[1]], [0], [0]], dtype=np.float))
-    # else:
-    # blue_goal_not_found_count += 1
-    # if yellow_goal:
-    # yellow_goal_filter.update(np.array([[yellow_goal[0]], [yellow_goal[1]], [0], [0]], dtype=np.float))
-    # else:
-    # yellow_goal_not_found_count += 1
-
-    # blue_goal_state = blue_goal_filter.predict()
-    # blue_goal = (blue_goal_state[0][0], blue_goal_state[1][0]) if blue_goal_state and blue_goal_not_found_count <= endurance else None
-    # yellow_goal_state = yellow_goal_filter.predict()
-    # yellow_goal = (yellow_goal_state[0][0], yellow_goal_state[1][0]) if yellow_goal_state else None
-
-    # Pack data
+    data = find_objects(debug=debug)
+    time = clock.fps()
+    #print(data)
+        # Pack data
     buf = struct.pack(
-        "<dddd",
-        blue_goal[0] if blue_goal else float("nan"),  # d, double
-        blue_goal[1] if blue_goal else float("nan"),  # d, double
-        yellow_goal[0] if yellow_goal else float("nan"),  # d, double
-        yellow_goal[1] if yellow_goal else float("nan"),  # d, double
+        "<dddddd",
+        data[0] ,  # d, double
+        data[1] ,  # d, double
+        data[2] ,  # d, double
+        data[3],  # d, double
+        data[4],
+        data[5],
     )
+    #buf = struct.pack(
+        #"<dddddd",
+        #data[0] ,  # d, double
+        #data[1] ,  # d, double
+        #data[2] ,  # d, double
+        #data[3],  # d, double
+        #data[4],
+        #time,
+    #)
+    # print(data[1])
 
+    # print("Ball distance:", data[5])
     # Encode with COBS
     buf = cobs_encode(buf)
     buf += b"\x00"  # delimiter byte
 
     # Send packet
     serial.write(buf)
-
-    if DEBUG_CAMERA:
-        img.draw_cross(
-            int(CAMERA_CENTER[0]), int(CAMERA_CENTER[1]), color=(255, 255, 255)
-        )
-        img.draw_rectangle(CAMERA_ROI, color=(255, 255, 255))
-
-        if blue_goal:
-            print(f"Blue Goal: {blue_goal[0]:.1f}º {blue_goal[1]:.1f} cm", end=" | ")
-        else:
-            print("Blue Goal:                ", end=" | ")
-        if yellow_goal:
-            print(f"Yellow Goal: {yellow_goal[0]:.1f}º {yellow_goal[1]:.1f} cm")
-        else:
-            print("Yellow Goal:                ")
-
-# --------------------------------------------------------------------------------------------------

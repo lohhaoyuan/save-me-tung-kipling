@@ -1371,9 +1371,9 @@ I had virtually no rehearsal for that.
 ## TODO:
 * localisation
 * line avoidance
-* movement
 * goalie
 * strats
 
 # COMPLETE:
 * light
+* movement

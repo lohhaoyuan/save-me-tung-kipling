@@ -2,7 +2,6 @@
 #include "main.h"
 #include "config.h"
 
-Servo FrontESC;
 
 
 void setup(){
@@ -25,8 +24,5 @@ void setup(){
 }
 
 void loop(){
-    TopSerial.print("ping from bottom");
-    if (TopSerial.available()>0){
-        Serial.write(TopSerial.read());
-    }
+
 }

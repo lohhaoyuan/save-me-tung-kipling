@@ -60,6 +60,15 @@ struct SesbianLexPayload {
     Point robot_position;
 }; // teensy payload
 
+struct EncoderTxPayload {
+    int16_t motorSpeed[4];
+};
+
+struct EncoderRxPayload{
+    uint8_t rpm[4];
+};
+
+
 // union L2ESPTxPayloadUnion {
 //     L2ESPTxPayload data;
 //     byte bytes[sizeof(L2ESPTxPayload)];

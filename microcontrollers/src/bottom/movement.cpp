@@ -7,19 +7,10 @@
 Movement::Movement() {}
 
 void Movement::init() {
-    pinMode(FL_DIR, OUTPUT);
-    pinMode(FR_DIR, OUTPUT);
-    pinMode(BL_DIR, OUTPUT);
-    pinMode(BR_DIR, OUTPUT);
-    pinMode(FL_PWM, OUTPUT);
-    pinMode(FR_PWM, OUTPUT);
-    pinMode(BL_PWM, OUTPUT);
-    pinMode(BR_PWM, OUTPUT);
-
     analogWriteResolution(10);
     // Values from https://www.pjrc.com/teensy/td_pulse.html
     // (based on F_CPU_ACTUAL = 600 MHz)
-    analogWriteFrequency(20000);
+    // analogWriteFrequency(20000);
   
 }
 
@@ -118,7 +109,7 @@ void Movement::setSolenoidActive() {
 }
 
 // Writes the current movement data.
-void Movement::drive() {
+EncoderTxPayload Movement::calcDrive() {
     // Convert polar to cartesian
     const auto x = sind(direction);
     const auto y = cosd(direction);
@@ -142,38 +133,45 @@ void Movement::drive() {
     const int16_t BLSpeed = transformSpeed(x * -COS45 + y * SIN45, +angular);
     const int16_t BRSpeed = transformSpeed(x * COS45 + y * SIN45, -angular);
 
-    // Constrain motor speed with "hardware-imposed" limits
-    auto constrainSpeed = [](int16_t speed) {
-        // If the speed is below the stall speed, don't bother moving
-        if (abs(speed) < DRIVE_STALL_SPEED) return 0;
-        return min(abs(speed), DRIVE_MAX_SPEED);
-    };
+    EncoderTxPayload payload;
+    payload.motorSpeed[0] = FLSpeed;
+    payload.motorSpeed[1] = FRSpeed;
+    payload.motorSpeed[2] = BLSpeed;
+    payload.motorSpeed[3] = BRSpeed;
 
-    // Set the motor directions and speeds
-    digitalWriteFast(PIN_MOTOR_FL_DIR,
-                     FLSpeed > 0 ? MOTOR_FL_REVERSED : !MOTOR_FL_REVERSED);
-    digitalWriteFast(PIN_MOTOR_FR_DIR,
-                     FRSpeed > 0 ? MOTOR_FR_REVERSED : !MOTOR_FR_REVERSED);
-    digitalWriteFast(PIN_MOTOR_BL_DIR,
-                     BLSpeed > 0 ? MOTOR_BL_REVERSED : !MOTOR_BL_REVERSED);
-    digitalWriteFast(PIN_MOTOR_BR_DIR,
-                     BRSpeed > 0 ? MOTOR_BR_REVERSED : !MOTOR_BR_REVERSED);
-    analogWrite(PIN_MOTOR_FL_PWM,
-                constrainSpeed(FLSpeed) * MOTOR_FL_MULTIPLIER);
-    analogWrite(PIN_MOTOR_FR_PWM,
-                constrainSpeed(FRSpeed) * MOTOR_FR_MULTIPLIER);
-    analogWrite(PIN_MOTOR_BL_PWM,
-                constrainSpeed(BLSpeed) * MOTOR_BL_MULTIPLIER);
-    analogWrite(PIN_MOTOR_BR_PWM,
-                constrainSpeed(BRSpeed) * MOTOR_BR_MULTIPLIER);
+    return payload;
+    // // Constrain motor speed with "hardware-imposed" limits
+    // auto constrainSpeed = [](int16_t speed) {
+    //     // If the speed is below the stall speed, don't bother moving
+    //     if (abs(speed) < DRIVE_STALL_SPEED) return 0;
+    //     return min(abs(speed), DRIVE_MAX_SPEED);
+    // };
 
-#ifdef NEW_BOT
-    // Update solenoid state
-    L1ESPRxPayloadUnion l1Payload;
-    l1Payload.data.activateSolenoid =
-        millis() <= solenoidLastActivated + SOLENOID_ACTIVATION_PERIOD;
-    L1ESPPacketSerial.send(l1Payload.bytes, sizeof(l1Payload.bytes));
-#endif
+    // // Set the motor directions and speeds
+    // digitalWriteFast(PIN_MOTOR_FL_DIR,
+    //                  FLSpeed > 0 ? MOTOR_FL_REVERSED : !MOTOR_FL_REVERSED);
+    // digitalWriteFast(PIN_MOTOR_FR_DIR,
+    //                  FRSpeed > 0 ? MOTOR_FR_REVERSED : !MOTOR_FR_REVERSED);
+    // digitalWriteFast(PIN_MOTOR_BL_DIR,
+    //                  BLSpeed > 0 ? MOTOR_BL_REVERSED : !MOTOR_BL_REVERSED);
+    // digitalWriteFast(PIN_MOTOR_BR_DIR,
+    //                  BRSpeed > 0 ? MOTOR_BR_REVERSED : !MOTOR_BR_REVERSED);
+    // analogWrite(PIN_MOTOR_FL_PWM,
+    //             constrainSpeed(FLSpeed) * MOTOR_FL_MULTIPLIER);
+    // analogWrite(PIN_MOTOR_FR_PWM,
+    //             constrainSpeed(FRSpeed) * MOTOR_FR_MULTIPLIER);
+    // analogWrite(PIN_MOTOR_BL_PWM,
+    //             constrainSpeed(BLSpeed) * MOTOR_BL_MULTIPLIER);
+    // analogWrite(PIN_MOTOR_BR_PWM,
+    //             constrainSpeed(BRSpeed) * MOTOR_BR_MULTIPLIER);
+
+// #ifdef NEW_BOT
+//     // Update solenoid state
+//     L1ESPRxPayloadUnion l1Payload;
+//     l1Payload.data.activateSolenoid =
+//         millis() <= solenoidLastActivated + SOLENOID_ACTIVATION_PERIOD;
+//     L1ESPPacketSerial.send(l1Payload.bytes, sizeof(l1Payload.bytes));
+// #endif
 
 #ifdef DEBUG
     Serial.print(" | Drive ");

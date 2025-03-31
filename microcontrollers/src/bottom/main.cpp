@@ -15,14 +15,16 @@ void setup(){
     // // TopPacketSerial.setStream(&TopSerial);
     // // TopPacketSerial.setPacketHandler(&TopPacketHandler);
 
-    // LightSerial.begin(115200);
+    EncoderSerial.begin(SHARED_BAUD_RATE);
     // // EncoderPacketSerial.setStream(&LightSerial);
     // // EncoderPacketSerial.setPacketHandler(&EncoderPacketHandler);
 
     
-    setupDribblers();
+    // setupDribblers();
 }
 
 void loop(){
-
+    if(EncoderSerial.available()>0){
+        Serial.write(EncoderSerial.read());
+    }
 }

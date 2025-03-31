@@ -50,7 +50,15 @@
 #define STOP_AT_POINT_MAXI      1000000
 #define STOP_AT_POINT_MAX_SPEED 300
 
+#define MOTOR_FL_REVERSED true
+#define MOTOR_FR_REVERSED false
+#define MOTOR_BL_REVERSED true
+#define MOTOR_BR_REVERSED false
 
+#define MOTOR_FL_MULTIPLIER 1.0
+#define MOTOR_FR_MULTIPLIER 1.0
+#define MOTOR_BL_MULTIPLIER 1.0
+#define MOTOR_BR_MULTIPLIER 1.0
 // Parameters (for solenoid)
 #define SOLENOID_ACTIVATION_PERIOD 150  // in ms
 #define SOLENOID_COOLDOWN_PERIOD   2000 // in ms

@@ -2,7 +2,7 @@
 #include "stm32f4.h"
 PacketSerial TeensyPacketSerial;
 
-void setup(){
+void setup() {
     pinMode(LED_PIN, OUTPUT);
     pinMode(FL_DIR, OUTPUT);
     pinMode(FR_DIR, OUTPUT);
@@ -18,17 +18,15 @@ void setup(){
     TeensyPacketSerial.setStream(&TeensySerial);
     TeensyPacketSerial.setPacketHandler(&TeensyPacketHandler);
     digitalWrite(LED_PIN, HIGH);
-  
-
 }
 
-void loop(){
+void loop() {
 
     TeensyPacketSerial.update();
-    // drive(speeds[0],speeds[1],speeds[2],speeds[3]);
-    // drive(200,200,200,200);
-    for (int i = 0; i < 256; i++) {
-        analogWrite(LED_PIN, i);
-        delay(5);
-    }
+    drive(speeds[0], speeds[1], speeds[2], speeds[3]);
+    // drive(200, 200, 200, 200);
+    // for (int i = 0; i < 256; i++) {
+    //     analogWrite(LED_PIN, i);
+    //     delay(5);
+    // }
 }

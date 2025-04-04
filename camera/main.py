@@ -13,7 +13,7 @@ np_dot = np.dot
 print( "version", ulab.__version__ )
 led = LED(2) # green led
 led.off()
-serial = UART(3,500000)
+serial = UART(3,115200)
 '''Extended Kalman Filter for smoother  ball following'''
 
 class KalmanFilter:
@@ -467,7 +467,7 @@ def send(data):
 
     for num in sendData:
         try:
-            uart.writechar(num)
+            UART.writechar(num)
         except:
             pass
 def cobs_encode(input_bytes):
@@ -535,7 +535,8 @@ while(True):
         #time,
     #)
 
-
+    print(data[2])
+    print(data[3])
     # print("Ball distance:", data[5])
     # Encode with COBS
     buf = cobs_encode(buf)
@@ -543,3 +544,11 @@ while(True):
 
     # Send packet
     serial.write(buf)
+# from pyb import UART
+# import time
+
+# uart = UART(3, 115200)
+
+# while True:
+#     uart.write("ping \n ")
+#     time.sleep_ms(500)

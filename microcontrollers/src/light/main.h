@@ -2,10 +2,10 @@
 #define MAIN_H
 
 #include <Arduino.h>
+#include <PacketSerial.h>
 #include <array>
 #include <deque>
 #include <stm32f103c_variant_generic.h>
-#include <PacketSerial.h>
 
 #include "config.h"
 #include "mux.h"
@@ -16,25 +16,25 @@ extern PacketSerial TeensyPacketSerial;
 
 #define LED_PIN PB15
 // Remap pins with new names
-#define M1    PB1    // Analog input from MUX1
-#define M1S0  PB2    // MUX1 control bit 0
-#define M1S1  PB10   // MUX1 control bit 1
-#define M1S2  PB0    // MUX1 control bit 2
-#define M1S3  PA7    // MUX1 control bit 3
+#define M1   PB1  // Analog input from MUX1
+#define M1S0 PB2  // MUX1 control bit 0
+#define M1S1 PB10 // MUX1 control bit 1
+#define M1S2 PB0  // MUX1 control bit 2
+#define M1S3 PA7  // MUX1 control bit 3
 
-#define M2    PA6    // Analog input from MUX2
-#define M2S0  PB6    // MUX2 control bit 0
-#define M2S1  PB7    // MUX2 control bit 1
-#define M2S2  PB5    // MUX2 control bit 2
-#define M2S3  PB4    // MUX2 control bit 3
+#define M2   PA6 // Analog input from MUX2
+#define M2S0 PB6 // MUX2 control bit 0
+#define M2S1 PB7 // MUX2 control bit 1
+#define M2S2 PB5 // MUX2 control bit 2
+#define M2S3 PB4 // MUX2 control bit 3
 
 #define FLAG_FRONT PA5
-#define FLAG_BACK PA9
+#define FLAG_BACK  PA9
 
-//muxes
+// muxes
 const auto muxs = std::array<Mux, 2>{
-    Mux(M1S0,M1S1,M1S2,M1S3,M1),
-    Mux(M2S0,M2S1,M2S2,M2S3,M2),
+    Mux(M1S0, M1S1, M1S2, M1S3, M1),
+    Mux(M2S0, M2S1, M2S2, M2S3, M2),
 };
 
 #define PHOTODIODE_COUNT 30
@@ -53,22 +53,22 @@ constexpr std::array<double, PHOTODIODE_COUNT> PHOTODIODE_BEARINGS = {
     288.00, 300.00, 312.00, 324.00, 336.00, 348.00,
 };
 
-
-
 // Parameters (for computing whether the photodiode is on the line)
 #define MUX_READ_DELAY                  0 // delay between channel switch and read in µs
 #define PHOTODIODE_ACTIVATION_THRESHOLD 2 // number of consecutive reads on line
 
 // Parameters (for photodiode calibration)
 #define LIGHT_RING_CALIBRATION_DURATION 1000 // in ms
-
+#ifdef HOME
 constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
-    1342, 1188, 1182,        928,         887,  1057, 1157, 1238, 1281, 1203,
-    767,  843,  828,         980,         1022, 1062, 986,  616,  679,  799,
-    568,  833,  100 /*ded*/, 100 /*ded*/, 782,  794,  978,  861,  1145, 1284,
+    3424, 3614, 3553, 3515, 3725, 3570, 3520, 3480, 3295, 3293,
+    3662, 3275, 3459, 3253, 3604, 3563, 3577, 3561, 3351, 3539,
+    3447, 3595, 3672, 3796, 3742, 3704, 3460, 3603, 3702, 3616,
 };
+#endif
+#ifdef COMP
+#endif
 
- 
 // Parameters (for computing which side of the line is the robot on)
 // To have switched sides of the line, the line angle must have jumped this much
 #define LINE_ANGLE_SWITCH_ANGLE 90.0
@@ -84,6 +84,5 @@ std::pair<double, double> adjustForLineSide(std::pair<double, double> line);
 void printLightRingCalibration();
 void printLightRing();
 void updateLightGates();
-
 
 #endif

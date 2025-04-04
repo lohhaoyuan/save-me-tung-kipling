@@ -57,7 +57,7 @@ union LightTxPayloadUnion {
 };
 
 struct CameraPayload {
-    int data[6];
+    double data[6];
 };
 
 union CameraPayloadUnion {
@@ -106,7 +106,7 @@ union BluetoothPayloadUnion {
     BluetoothPayloadUnion() : data() {}
 };
 
-struct LidarPayload{
+struct LidarPayload {
     int lidarDist[4];
 };
 

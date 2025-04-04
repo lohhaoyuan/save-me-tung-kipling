@@ -53,8 +53,8 @@ void setupIMU();
 double readIMUHeading();
 
 // localisation
-double ballMirrorRegress(double distance);
-double goalMirrorRegress(double distance);
+double ballMapping(double distance);
+double goalMapping(double distance);
 Vector localise();
 
 void ballFusion();

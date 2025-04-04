@@ -1,22 +1,28 @@
 #include "main.h"
 
 // Localisaation
-double ballMirrorRegress(double distance){
-    return (1.91653705 * powf(10, -7) * powf(distance, 5) -
-    6.07403517 * powf(10, -5) * powf(distance, 4) +
-    7.34613337 * powf(10, -3) * powf(distance, 3) -
-    4.15046723 * powf(10, -1) * powf(distance, 2) +
-    1.12502900 * powf(10, 1) * distance -
-    1.01032228 * powf(10, 2));
+ddouble ballMapping(double distance) {
+    if (distance != 500) {
+        return (3.41295982 * powf(10, -7) * powf(distance, 5) -
+                1.68660902 * powf(10, -4) * powf(distance, 4) +
+                3.30063050 * powf(10, -2) * powf(distance, 3) -
+                3.18336643 * powf(10, 0) * powf(distance, 2) +
+                1.51464368 * powf(10, 2) * distance -
+                2.83727898 * powf(10, 3));
+    } else
+        return 0;
 }
 
-double goalMirrorRegress(double distance){
-    return (1.91653705 * powf(10, -7) * powf(distance, 5) -
-    6.07403517 * powf(10, -5) * powf(distance, 4) +
-    7.34613337 * powf(10, -3) * powf(distance, 3) -
-    4.15046723 * powf(10, -1) * powf(distance, 2) +
-    1.12502900 * powf(10, 1) * distance -
-    1.01032228 * powf(10, 2));
+double goalMapping(double distance) {
+    if (distance != 500) {
+        return (5.85589344 * powf(10, -7) * powf(distance, 5) -
+                3.43829641 * powf(10, -4) * powf(distance, 4) +
+                8.05109171 * powf(10, -2) * powf(distance, 3) -
+                9.37413014 * powf(10, 0) * powf(distance, 2) +
+                5.42735448 * powf(10, 2) * distance -
+                1.24927556 * powf(10, 4));
+    } else
+        return 0;
 }
 
 

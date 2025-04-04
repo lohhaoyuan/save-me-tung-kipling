@@ -69,9 +69,9 @@ kf = KalmanFilter(F=F, B=B, H=H, Q=Q, R=R)
 
 
 
-# setting = 'home'
+setting = 'home'
 # setting = 'lab'
-setting = 'comp'
+# setting = 'comp'
 
 
 sensor.reset()
@@ -80,10 +80,17 @@ sensor.set_framesize(sensor.QVGA)
 sensor.skip_frames(time = 2000)
 if setting == 'lab':
     sensor.set_auto_gain(False, gain_db=17)
+    sensor.set_brightness(3)
     #easier to detect blue goal but harder to yellow goal and ball if gain is higher
     #converse is true
 elif setting == 'home' :
-    sensor.set_auto_gain(False, gain_db=26)
+    sensor.set_auto_gain(False, gain_db = 25)
+    sensor.set_auto_exposure(False, exposure_us = 100000)
+
+elif setting == 'comp':
+    sensor.set_auto_gain(False, gain_db = 15)
+    sensor.set_auto_exposure(False, exposure_us = 100000)
+
 
 print("1")
 curr_gain = sensor.get_gain_db()
@@ -94,12 +101,11 @@ curr_exposure = sensor.get_exposure_us()
 print(curr_exposure * 0.21)
 print("2")
 # if tuning exposure
-sensor.set_auto_exposure(False, exposure_us = 100000)
 
 LAB_EXPOSURE = 1775
 SC_EXPOSURE = 2000
 # sensor.set_auto_exposure(False, exposure_us = 20000)
-sensor.set_auto_gain(False, gain_db=15)
+# sensor.set_auto_gain(False, gain_db=15)
 
 # sensor.set_auto_exposure(False, exposure_us = 1000)
 sensor.skip_frames(time = 1000)
@@ -109,8 +115,8 @@ sensor.skip_frames(time = 1000)
 sensor.set_contrast(3)
 sensor.set_saturation(3)
 # sensor.set_auto_exposure(False, exposure_us = 101243) #101243+
-sensor.set_brightness(1)
 print("3")
+sensor.set_brightness(0)
 sensor.skip_frames(time=1000)
 print("4")
 
@@ -126,11 +132,14 @@ centreX = 159
 CAMERA_CENTER = np.array((centreX,centreY))
 
 
-
-red_thresh = [(38, 53, 9, 53, -8, 24)]
-blue_thresh = [(24, 60, -11, 7, -19, -5)]
-yellow_thresh = [(29, 47, -13, 15, 19, 39)]
-
+if setting == 'comp':
+    red_thresh = [(38, 53, 9, 53, -8, 24)]
+    blue_thresh = [(24, 60, -11, 7, -19, -5)]
+    yellow_thresh = [(29, 47, -13, 15, 19, 39)]
+elif setting == 'home':
+    red_thresh = [(29, 65, 15, 54, 12, 38)]
+    blue_thresh = [(12, 25, -17, 0, -22, -4)]
+    yellow_thresh = [(29, 100, -19, 6, 12, 42)]
 ROI = (0, 0, 320, 240)
 
 
@@ -412,7 +421,7 @@ def find_objects(debug=False):
         yellow.process()
         #print(f"Yellow pixel dist: {yellow.x} ")
         #if debug:
-            #print(f"Yellow Goal: Angle: {yellow.angle} Distance: {yellow.dist} Pixel Distance: {yellow.unmappedDist}")
+        print(f"Yellow Goal: Angle: {yellow.angle} Distance: {yellow.dist} Pixel Distance: {yellow.unmappedDist}")
     else:
         yellow = obj(0, 0, 0, 0)
 
@@ -422,7 +431,7 @@ def find_objects(debug=False):
         #print(f"blue pixel dist: {blue.y} ")
 
         #if debug:
-            #print(f"Blue Goal: Angle: {blue.angle} Distance: {blue.dist} Pixel Distance: {blue.unmappedDist}")
+        # print(f"Blue Goal: Angle: {blue.angle} Distance: {blue.dist} Pixel Distance: {blue.unmappedDist}")
     else:
         blue = obj(0, 0, 0, 0)
         #if debug:
@@ -430,7 +439,7 @@ def find_objects(debug=False):
 
     if ball:
         if debug:
-            print(f"Ball: Angle: {ball.angle} Distance: {ball.dist}")
+            # print(f"Ball: Angle: {ball.angle} Distance: {ball.dist}")
             pass
     else:
         ball = obj(0, 0, 0, 0)
@@ -525,7 +534,7 @@ while(True):
         #data[4],
         #time,
     #)
-    # print(data[1])
+
 
     # print("Ball distance:", data[5])
     # Encode with COBS

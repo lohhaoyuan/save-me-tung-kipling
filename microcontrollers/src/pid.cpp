@@ -3,11 +3,11 @@
 #include <Arduino.h>
 
 // A simple PID controller.
-PIDController::PIDController(const double targetSetpoint, const double min,
-                             const double max, const double kp, const double ki,
+PIDController::PIDController(const double targetSetpoint, const double minOut,
+                             const double maxOut, const double kp, const double ki,
                              const double kd, const uint32_t minDt,
                              const double maxi, const double maxSetpointChange)
-    : _targetSetpoint(targetSetpoint), _min(min), _max(max), _kp(kp), _ki(ki),
+    : _targetSetpoint(targetSetpoint), _minOut(minOut), _maxOut(maxOut), _kp(kp), _ki(ki),
       _kd(kd), _minDt(minDt), _maxi(maxi == infinity() ? maxi : maxi / ki),
       _maxSetpointChange(maxSetpointChange) {}
 
@@ -38,7 +38,12 @@ double PIDController::advance(const double input, const double scaler,
 
     // Find PID components
     auto error = _setpoint - input;
-
+    if (abs(error) < 2.0) {
+        _integral = 0;        // prevent I windup
+        _lastError = 0;
+        _lastOutput = 0;
+        return 0.0;
+    }
     // TODO: Consider whether this is beneficial
     // // Correct for errors that are angles
     // if (isAngle) {
@@ -61,7 +66,7 @@ double PIDController::advance(const double input, const double scaler,
         (_kd * _kp * dt * powf(scaler, 2)) * (error - _lastError) / dt;
 
     // Combine components to get output
-    const auto output = constrain(p + i + d, _min, _max);
+    const auto output = constrain(p + i + d, _minOut, _maxOut);
 
     // For debugging
     _lastInput = input;
@@ -91,9 +96,9 @@ void PIDController::updateSetpoint(const double value) {
 }
 
 // Update limits.
-void PIDController::updateLimits(const double min, const double max) {
-    _min = min;
-    _max = max;
+void PIDController::updateLimits(const double minOut, const double maxOut) {
+    _minOut = minOut;
+    _maxOut = maxOut;
 }
 
 // Update gains.
@@ -124,6 +129,5 @@ void PIDController::debugPrint(const char *name, Stream &serial) {
     printdouble(_lastI);
     serial.printf(" | D: ");
     printdouble(_lastD);
-    serial.printf(" | dt: %4d", _lastDt);
-    serial.println();
+    serial.printf(" | dt: %4d", _lastDt);   
 }

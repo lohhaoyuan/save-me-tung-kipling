@@ -45,9 +45,26 @@ struct Line {
 
 struct LightTxPayload {
     Line line;
+    bool frontLG;
+    bool backLG;
 };
+
+union LightTxPayloadUnion {
+    LightTxPayload data;
+    byte bytes[sizeof(LightTxPayload)];
+
+    LightTxPayloadUnion() : data() {}
+};
+
 struct CameraPayload {
     int data[6];
+};
+
+union CameraPayloadUnion {
+    CameraPayload data;
+    byte bytes[sizeof(CameraPayload)];
+
+    CameraPayloadUnion() : data() {}
 };
 
 struct SesbianLexPayload {
@@ -55,19 +72,49 @@ struct SesbianLexPayload {
     Vector blue;
     Vector yellow;
     int lidarDist[4];
-    double lidarConfidence[4];
     double yaw;
     Point robot_position;
 }; // teensy payload
+
+union SesbianLexPayloadUnion {
+    SesbianLexPayload data;
+    byte bytes[sizeof(SesbianLexPayload)];
+
+    SesbianLexPayloadUnion() : data() {}
+};
 
 struct EncoderTxPayload {
     int16_t motorSpeed[4];
 };
 
-struct EncoderRxPayload{
-    uint8_t rpm[4];
+union EncoderTxPayloadUnion {
+    EncoderTxPayload data;
+    byte bytes[sizeof(EncoderTxPayload)];
+
+    EncoderTxPayloadUnion() : data() {}
 };
 
+struct BluetoothPayload {
+    Vector ball;
+    bool robotLive;
+};
+
+union BluetoothPayloadUnion {
+    BluetoothPayload data;
+    byte bytes[sizeof(BluetoothPayload)];
+
+    BluetoothPayloadUnion() : data() {}
+};
+
+struct LidarPayload{
+    int lidarDist[4];
+};
+
+union LidarPayloadUnion {
+    LidarPayload data;
+    byte bytes[sizeof(LidarPayload)];
+    LidarPayloadUnion() : data() {}
+};
 
 // union L2ESPTxPayloadUnion {
 //     L2ESPTxPayload data;

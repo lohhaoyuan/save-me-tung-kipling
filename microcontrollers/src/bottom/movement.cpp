@@ -1,7 +1,6 @@
 #include "movement.h"
 #include "main.h"
 
-#include "main.h"
 #include "util.h"
 
 Movement::Movement() {}
@@ -109,7 +108,7 @@ void Movement::setSolenoidActive() {
 }
 
 // Writes the current movement data.
-EncoderTxPayload Movement::calcDrive() {
+void Movement::drive() {
     // Convert polar to cartesian
     const auto x = sind(direction);
     const auto y = cosd(direction);
@@ -123,7 +122,8 @@ EncoderTxPayload Movement::calcDrive() {
     headingController.updateSetpoint(heading);
     // Scale the controller output linearly to velocity with a reference
     // velocity of 300 (we tune it at that)
-    auto scaler = velocity == 0 ? HEADING_STATIONARY_SCALER : velocity / 300;
+    // auto scaler = velocity == 0 ? HEADING_STATIONARY_SCALER : velocity / 300;
+    auto scaler = 1.0;
     const auto angularVelocity =
         headingController.advance(actualHeading, scaler, true);
     const auto angular = 0.25 * angularVelocity;
@@ -133,13 +133,19 @@ EncoderTxPayload Movement::calcDrive() {
     const int16_t BLSpeed = transformSpeed(x * -COS45 + y * SIN45, +angular);
     const int16_t BRSpeed = transformSpeed(x * COS45 + y * SIN45, -angular);
 
-    EncoderTxPayload payload;
-    payload.motorSpeed[0] = FLSpeed;
-    payload.motorSpeed[1] = FRSpeed;
-    payload.motorSpeed[2] = BLSpeed;
-    payload.motorSpeed[3] = BRSpeed;
+    EncoderTxPayloadUnion payload;
+    payload.data.motorSpeed[0] = FLSpeed;
+    payload.data.motorSpeed[1] = FRSpeed;
+    payload.data.motorSpeed[2] = BLSpeed;
+    payload.data.motorSpeed[3] = BRSpeed;
+    // payload.data.motorSpeed[0] = 200;
+    // payload.data.motorSpeed[1] = 200;
+    // payload.data.motorSpeed[2] = 200;
+    // payload.data.motorSpeed[3] = 200;
 
-    return payload;
+
+
+    EncoderPacketSerial.send(payload.bytes, sizeof(payload.bytes));
     // // Constrain motor speed with "hardware-imposed" limits
     // auto constrainSpeed = [](int16_t speed) {
     //     // If the speed is below the stall speed, don't bother moving

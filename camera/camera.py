@@ -69,8 +69,9 @@ kf = KalmanFilter(F=F, B=B, H=H, Q=Q, R=R)
 
 
 
-setting = 'home'
+# setting = 'home'
 # setting = 'lab'
+setting = 'comp'
 
 
 sensor.reset()
@@ -84,7 +85,6 @@ if setting == 'lab':
 elif setting == 'home' :
     sensor.set_auto_gain(False, gain_db=26)
 
-
 print("1")
 curr_gain = sensor.get_gain_db()
 
@@ -94,20 +94,22 @@ curr_exposure = sensor.get_exposure_us()
 print(curr_exposure * 0.21)
 print("2")
 # if tuning exposure
-#sensor.set_auto_exposure(False, exposure_us = 100000)
+sensor.set_auto_exposure(False, exposure_us = 100000)
 
 LAB_EXPOSURE = 1775
 SC_EXPOSURE = 2000
+# sensor.set_auto_exposure(False, exposure_us = 20000)
+sensor.set_auto_gain(False, gain_db=15)
 
 # sensor.set_auto_exposure(False, exposure_us = 1000)
 sensor.skip_frames(time = 1000)
 # === WHITE BAL ===
 #sensor.set_auto_whitebal(False, rgb_gain_db = (60, 60, 62)) #Must remain false for blob tracking
-#sensor.set_auto_whitebal(False, rgb_gain_db = (4, 4, 4))
-sensor.set_contrast(5)
+# sensor.set_auto_whitebal(False, rgb_gain_db = (4, 4, 4))
+sensor.set_contrast(3)
 sensor.set_saturation(3)
-#sensor.set_auto_exposure(False, exposure_us = 101243) #101243+
-sensor.set_brightness(0)
+# sensor.set_auto_exposure(False, exposure_us = 101243) #101243+
+sensor.set_brightness(1)
 print("3")
 sensor.skip_frames(time=1000)
 print("4")
@@ -119,20 +121,15 @@ ID = 'robot1'
 
 centreAngleY = 121
 centreAngleX = 162
-centreY = 150
+centreY = 140
 centreX = 159
 CAMERA_CENTER = np.array((centreX,centreY))
 
 
-if setting == 'lab':
-    red_thresh = [(0, 100, 21, 127, 14, 88)]
-    blue_thresh = [(0, 62, -128, 4, -128, -7)]
-    yellow_thresh = [(0, 100, -11, 127, 24, 127)]
 
-elif (setting == 'home'):
-    red_thresh = [(14, 31, 18, 23, 13, 29) ]
-    blue_thresh = [(15, 23, -13, -1, -128, -5)]
-    yellow_thresh = [(18, 39, -5, 10, 18, 31)]
+red_thresh = [(38, 53, 9, 53, -8, 24)]
+blue_thresh = [(24, 60, -11, 7, -19, -5)]
+yellow_thresh = [(29, 47, -13, 15, 19, 39)]
 
 ROI = (0, 0, 320, 240)
 

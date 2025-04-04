@@ -14,7 +14,9 @@ double clipAngleTo360(double angle);
 double angleDifference(double leftAngle, double rightAngle);
 double smallerAngleDifference(double leftAngle, double rightAngle);
 double angleBisector(double leftAngle, double rightAngle);
-
+inline double round1dp(double value) {
+    return round(value * 10.0) / 10.0;
+}
 double sind(double angle);
 double cosd(double angle);
 double acosd(double angle);

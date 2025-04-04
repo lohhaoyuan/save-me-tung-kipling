@@ -3,7 +3,7 @@
 
 
 #include <Arduino.h>
-#include <PacketSerial.h>
+#include "PacketSerial.h"
 #include <Adafruit_BNO08x.h>
 #include <SPI.h>
 #include <ArduinoEigenDense.h>
@@ -26,22 +26,13 @@
 struct Sensors{
     Vector cam_ball;
     Vector bt_ball;
-    Vector blue;
-    Vector yellow;
-    int lidarDist[4];
-    double lidarConfidence[4];
-    double yaw;
-    Point robot_position;
-};
-
-struct Processed {
+    Vector offense;
+    Vector defense;
     Vector ball;
-    Vector blue;
-    Vector yellow;
     int lidarDist[4];
-    double lidarConfidence[4];
     double yaw;
-    Point robot_position;
+    Vector robot_position;
+    bool TeammateLive;
 };
 
 extern Sensors sensors;
@@ -53,10 +44,9 @@ extern PacketSerial CameraPacketSerial;
 // functions
 
 // Packet Handlers
-void BTPacketHandler(const byte *buf, size_t size);
-void SubPacketHandler(const byte *buf, size_t size);
-void CameraPacketHandler(const byte *buf, size_t size);
-void LidarPacketHandler(const byte *buf, size_t size);
+void BTPacketHandler(const uint8_t *buf, size_t size);
+void CameraPacketHandler(const uint8_t *buf, size_t size);
+void LidarPacketHandler(const uint8_t *buf, size_t size);
 
 // IMU
 void setupIMU();
@@ -64,8 +54,10 @@ double readIMUHeading();
 
 // localisation
 double ballMirrorRegress(double distance);
-Vector centreVectorAtk();
-Vector centreVectorDef();
-Vector centreVectorBoth();
+double goalMirrorRegress(double distance);
 Vector localise();
+
+void ballFusion();
+void positionFusion();
+
 #endif

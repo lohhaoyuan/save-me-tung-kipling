@@ -1,5 +1,7 @@
+
 #ifndef MAIN_H
 #define MAIN_H
+
 
 #include <Arduino.h>
 #include "PacketSerial.h"
@@ -9,10 +11,12 @@
 #include "util.h"
 #include <Servo.h>
 
+
 // SERIAL OBJECTS
 extern PacketSerial LightPacketSerial; 
 extern PacketSerial TopPacketSerial; // teensy teensy
 extern PacketSerial EncoderPacketSerial;
+
 
 #define LightSerial Serial3
 #define TopSerial Serial4 // teensy teensy
@@ -27,9 +31,13 @@ void EncoderPacketHandler(const byte *buf, size_t size);
 #define FrontESCpin 9
 #define BackESCpin 6
 #define FLAG1 13
+#define FLAG2 22
 
 
-struct Processed{
+struct Sensors{
+    Line line;
+    bool frontLG;
+    bool backLG;
     Vector ball;
     Vector blue;
     Vector yellow;
@@ -45,6 +53,9 @@ extern Servo FrontESC;
 extern Servo BackESC;
 void setupDribblers();
 void runDribblers(int speed);
+extern Sensors sensors;
+void avoidLine();
+
 
 
 #endif

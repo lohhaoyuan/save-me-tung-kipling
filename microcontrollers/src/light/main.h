@@ -6,11 +6,15 @@
 #include <deque>
 #include <stm32f103c_variant_generic.h>
 #include <PacketSerial.h>
+
+#include "config.h"
 #include "mux.h"
 #include "shared.h"
 
 #define TeensySerial Serial2
+extern PacketSerial TeensyPacketSerial;
 
+#define LED_PIN PB15
 // Remap pins with new names
 #define M1    PB1    // Analog input from MUX1
 #define M1S0  PB2    // MUX1 control bit 0
@@ -23,6 +27,9 @@
 #define M2S1  PB7    // MUX2 control bit 1
 #define M2S2  PB5    // MUX2 control bit 2
 #define M2S3  PB4    // MUX2 control bit 3
+
+#define FLAG_FRONT PA5
+#define FLAG_BACK PA9
 
 //muxes
 const auto muxs = std::array<Mux, 2>{
@@ -47,6 +54,7 @@ constexpr std::array<double, PHOTODIODE_COUNT> PHOTODIODE_BEARINGS = {
 };
 
 
+
 // Parameters (for computing whether the photodiode is on the line)
 #define MUX_READ_DELAY                  0 // delay between channel switch and read in µs
 #define PHOTODIODE_ACTIVATION_THRESHOLD 2 // number of consecutive reads on line
@@ -60,6 +68,7 @@ constexpr std::array<uint16_t, PHOTODIODE_COUNT> PHOTODIODE_THRESHOLDS = {
     568,  833,  100 /*ded*/, 100 /*ded*/, 782,  794,  978,  861,  1145, 1284,
 };
 
+ 
 // Parameters (for computing which side of the line is the robot on)
 // To have switched sides of the line, the line angle must have jumped this much
 #define LINE_ANGLE_SWITCH_ANGLE 90.0
@@ -74,5 +83,7 @@ std::pair<double, double> findLine(std::array<bool, PHOTODIODE_COUNT> onLine);
 std::pair<double, double> adjustForLineSide(std::pair<double, double> line);
 void printLightRingCalibration();
 void printLightRing();
+void updateLightGates();
+
 
 #endif

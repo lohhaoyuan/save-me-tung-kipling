@@ -85,7 +85,7 @@ namespace Direction {
         void setSolenoidActive();
     
         // Actuate outputs at the end of the loop
-        EncoderTxPayload calcDrive();
+        void drive();
     
         // Controllers (these are public so that we can run debugPrint() on them)
         PIDController headingController = PIDController(

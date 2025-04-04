@@ -10,24 +10,32 @@
 #define GOALIE 
 // #define STRIKER
 
+
+// location
+#define HOME
+// #define COMP
+
+// DRIBBLER SETTINGS - NEED TO CHANGE BECAUSE THESE ARE IVANS
+
 #define DRIBBLER_LOWER_LIMIT 128
 #define DRIBBLER_UPPER_LIMIT 198
 #define DRIBBLER_DEFAULT_SPEED 220
 
-// NEED TO CHANGE BECAUSE THESE ARE IVANS
-// Parameters (for drive)
+// DRIVE SETTINGS - NEED TO CHANGE COS IVANS
 #define DRIVE_STALL_SPEED 30
 #define DRIVE_MIN_SPEED   100
 #define DRIVE_MAX_SPEED   600
 #define SIGMOID_MAX_DIFF  DRIVE_MAX_SPEED
 // PID controller for robot heading
-#define HEADING_KU 6.0e1 // tuned to ±0.5e1
+#define HEADING_KU 110
+#define HEADING_TU 0.121
+
 // ZN (no overshoot)  : kP=0.2  kI=0.4  kD=0.066
 // ZN (some overshoot): kP=0.33 kI=0.66 kD=0.11
 // ZN (classic)       : kP=0.6  kI=1.2  kD=0.075
-#define HEADING_KP                  0.5 * HEADING_KU
-#define HEADING_KI                  1.2
-#define HEADING_KD                  60
+#define HEADING_KP                  15.0
+#define HEADING_KI                  30
+#define HEADING_KD                  1.3
 #define HEADING_MIN_DT              4000 // in µs, minimum value for kD to have effect
 #define HEADING_MAXI                3.5e4
 #define HEADING_MAX_SETPOINT_CHANGE 0.1
@@ -63,5 +71,14 @@
 #define SOLENOID_ACTIVATION_PERIOD 150  // in ms
 #define SOLENOID_COOLDOWN_PERIOD   2000 // in ms
 
+// Parameters for Localisation
+#define BLUETOOTH_RELIABILITY_THRESHOLD 20
+#define HALF_GOAL_SEPARATION 103.6
+#define HALF_SHORT_SEPARATION 73.1
+
+
+#define LIGHT_GATE_THRESHOLD 1000
+#define WALL_AVOIDANCE_THRESHOLD 0.2
+#define WALL_AVOIDANCE_SPEED_MULTIPLIER 1023
 
 #endif

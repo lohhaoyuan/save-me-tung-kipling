@@ -17,16 +17,18 @@ void setup(){
     TeensySerial.begin(SHARED_BAUD_RATE);
     TeensyPacketSerial.setStream(&TeensySerial);
     TeensyPacketSerial.setPacketHandler(&TeensyPacketHandler);
-
+    digitalWrite(LED_PIN, HIGH);
+  
 
 }
 
 void loop(){
 
-    // TeensyPacketSerial.update();
+    TeensyPacketSerial.update();
+    drive(speeds[0],speeds[1],speeds[2],speeds[3]);
     // drive(200,200,200,200);
-    for (int i = 0; i < 256; i++) {
-        analogWrite(LED_PIN, i);
-        delay(5);
-    }
+    // for (int i = 0; i < 256; i++) {
+    //     analogWrite(LED_PIN, i);
+    //     delay(5);
+    // }
 }

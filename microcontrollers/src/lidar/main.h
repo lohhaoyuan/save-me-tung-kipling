@@ -1,59 +1,34 @@
-#include "main.h"
+#pragma once
 
-HardwareSerial MySerial0(0);
-PacketSerial L3LIDARSerial;
+#include "PacketSerial.h"
+#include "util.h"
+#include <Arduino.h>
+#include <HardwareSerial.h>
+#include <TFLI2C.h>
+#include <Wire.h>
 
-TFLI2C front, riht, back, left;
-TFLI2C tflI2C[4] = {front, right, back, left};
+// Uncomment to enable debug output
+// #define DEBUGTOF
 
-int16_t tfDist[4];
-int tfAddress[4] = {0x35, 0x22, 0x33, 0x44}; // front, right, back, left
+extern HardwareSerial MySerial0;
+extern PacketSerial L3LIDARSerial;
+extern TFLI2C tflI2C[4];
+extern int16_t tfDist[4];
+extern int tfAddress[4];
 
-lidardata esp32lidardata;
+// Structs
+struct lidardata {
+    int distance[4];
+};
 
-void setup() {
-    Serial.begin(115200);
-    MySerial0.begin(115200, SERIAL_8N1, -1, -1);
-    L3LIDARSerial.begin(&MySerial0);
-    Wire.begin();
+extern lidardata esp32lidardata;
 
-    setupLidar();
-}
+typedef struct lidarTxPayload {
+    lidardata esp32lidardata;
+} lidarTxPayload;
 
-void loop() {
-    readLidar();
-    sendLidarData();
-    delay(20);
-}
+// Function prototypes
+void setupLidar();
+void readLidar();
+void sendLidarData();
 
-// Initialize LIDAR settings
-void setupLidar() {
-    for (int i = 0; i < 4; i++) { tflI2C[i].Save_Settings(tfAddress[i]); }
-    // Uncomment if you need to reset I2C address
-    // tflI2C[3].Set_I2C_Addr(0x44, 0x22);
-    // tflI2C[3].Soft_Reset(0x44);
-}
-
-// Read LIDAR sensor data
-void readLidar() {
-    for (int i = 0; i < 4; i++) {
-        if (tflI2C[i].getData(tfDist[i], tfAddress[i])) {
-#ifdef DEBUGTOF
-            Serial.print(" Dist: ");
-            Serial.print(tfDist[i]);
-            if (i == 3) Serial.println();
-#endif
-            esp32lidardata.distance[i] = tfDist[i];
-        } else {
-            esp32lidardata.distance[i] = 0;
-            tflI2C[i].printStatus();
-        }
-    }
-}
-
-// Send LIDAR data over serial
-void sendLidarData() {
-    byte buf[sizeof(lidarTxPayload)];
-    memcpy(buf, &esp32lidardata, sizeof(esp32lidardata));
-    L3LIDARSerial.send(buf, sizeof(buf));
-}

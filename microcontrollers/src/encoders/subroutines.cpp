@@ -3,13 +3,19 @@
 int16_t speeds[4];
 
 void TeensyPacketHandler(const uint8_t *buf, size_t size) {
-    EncoderTxPayload payload;
-    memcpy(&payload, buf, sizeof(payload));
-    speeds[0] = payload.motorSpeed[0];
-    speeds[1] = payload.motorSpeed[1];
-    speeds[2] = payload.motorSpeed[2];
-    speeds[3] = payload.motorSpeed[3];
+        if (size != sizeof(EncoderTxPayload)) {
+               return;
+        }
+        
+        EncoderTxPayloadUnion packet;
+        memcpy(packet.bytes, buf, size);
+
+        speeds[0] = packet.data.motorSpeed[0];
+        speeds[1] = packet.data.motorSpeed[1];
+        speeds[2] = packet.data.motorSpeed[2];
+        speeds[3] = packet.data.motorSpeed[3];
 }
+
 void drive(int16_t FL_SPEED,
             int16_t FR_SPEED,
             int16_t BL_SPEED,

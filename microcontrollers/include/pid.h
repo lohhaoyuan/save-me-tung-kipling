@@ -5,7 +5,7 @@
 
 class PIDController {
   public:
-    PIDController(const double setpoint, const double min, const double max,
+    PIDController(const double setpoint, const double minOut, const double maxOut,
                   const double kp, const double ki, const double kd,
                   const uint32_t minDt = 0, const double maxi = infinity(),
                   const double maxSetpointChange = infinity());
@@ -17,7 +17,7 @@ class PIDController {
 
     // Update parameters
     void updateSetpoint(const double value);
-    void updateLimits(const double min, const double max);
+    void updateLimits(const double minOut, const double maxOut);
     void updateGains(const double kp, const double ki, const double kd);
 
     void debugPrint(const char *name = nullptr, Stream &serial = Serial);
@@ -28,8 +28,8 @@ class PIDController {
     // Parameters
     double _targetSetpoint;
     double _setpoint;
-    double _min;
-    double _max;
+    double _minOut;
+    double _maxOut;
     double _kp;
     double _ki;
     double _kd;

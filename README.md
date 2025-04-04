@@ -1370,10 +1370,14 @@ I had virtually no rehearsal for that.
 
 ## TODO:
 * localisation
+* light gate
 * line avoidance
 * goalie
 * strats
 
 # COMPLETE:
-* light
+* light ring
 * movement
+
+# OTHERS:
+* Fuck encoders oh my fucking god FUCK ENCODERS

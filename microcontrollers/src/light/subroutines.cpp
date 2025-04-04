@@ -7,7 +7,10 @@
 #include <vector>
 
 #include "util.h"
+#include "config.h"
 
+extern bool frontLG;
+extern bool backLG;
 // Read the value of a photodiode
 uint16_t readPhotodiode(uint8_t i) {
     return muxs[PHOTODIODE_MAP[i] >> 4].readChannel(PHOTODIODE_MAP[i] & 0x0F,
@@ -143,6 +146,7 @@ std::pair<double, double> adjustForLineSide(std::pair<double, double> line) {
 
 // Run the calibration routine
 void printLightRingCalibration() {
+    TeensySerial.println("Penis");
     // min = green (field), max = white (line)
     uint16_t min[PHOTODIODE_COUNT], max[PHOTODIODE_COUNT];
     for (int i = 0; i < PHOTODIODE_COUNT; ++i) {
@@ -192,4 +196,11 @@ void printLightRing() {
             TeensySerial.printf("%4d ", values[i]);
     }
     TeensySerial.println("|");
+}
+
+void updateLightGates() {
+    // Update the light gates
+    digitalWrite(FLAG_FRONT, readPhotodiode(16) > LIGHT_GATE_THRESHOLD ? HIGH : LOW); frontLG = readPhotodiode(16) > LIGHT_GATE_THRESHOLD ? true : false;
+    digitalWrite(FLAG_BACK, readPhotodiode(32) > LIGHT_GATE_THRESHOLD ? HIGH : LOW); backLG = readPhotodiode(32) > LIGHT_GATE_THRESHOLD ? true : false;
+    
 }

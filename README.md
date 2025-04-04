@@ -1376,7 +1376,8 @@ I had virtually no rehearsal for that.
 * strats
 
 # COMPLETE:
-* light ring
+* light
+* lg
 * movement
 
 # OTHERS:
